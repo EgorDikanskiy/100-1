@@ -25,7 +25,6 @@ HTTP_ERROR_CODES = {
 
 @middleware
 async def auth_middleware(request: "Request", handler):
-
     session = await get_session(request)
     if session:
         request.admin = Admin.admin_from_session(session)
