@@ -1,0 +1,14 @@
+session:
+  key: your_session
+admin:
+  email: admin@admin.com
+  password: admin
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: password
+  database: kts
+bot:
+  token: your_token
+

@@ -1,0 +1,16 @@
+user_token: OTY3NmVjYWYtZTJhNC00NzNhLTgwM2YtZGY3OTBkYTM3YWFhXzc0NDY=
+
+session:
+  key: CaY5iCkYtN7DqXdiYK1BvmGrQuaSA4Tl4bEk9my0jc0=
+admin:
+  email: admin@admin.com
+  password: admin
+database:
+  host: localhost
+  port: 5432
+  user: postgres
+  password: 4611205b
+  database: kts
+bot:
+  token: 7224529296:AAEIsew5hzLhujlWZhvQPpSSeseeJv8WhaA
+
