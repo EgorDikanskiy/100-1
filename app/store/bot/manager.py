@@ -15,6 +15,6 @@ class BotManager:
     async def handle_updates(self, updates: list[Update]):
         for update in updates:
             original_text = update.object.message.text
-            chat_id = update.object.message.from_id
+            chat_id = update.object.message.chat_id
             echo_message = Message(chat_id=chat_id, text=original_text)
             await self.app.store.tg_api.send_message(echo_message)

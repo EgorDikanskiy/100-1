@@ -70,7 +70,8 @@ class TelegramApiAccessor(BaseAccessor):
                     continue
                 update_msg = UpdateMessage(
                     id=message_data.get("message_id"),
-                    from_id=message_data.get("from", {}).get("id"),
+                    user_id=message_data.get("from", {}).get("id"),
+                    chat_id=message_data.get("chat", {}).get("id"),
                     text=message_data.get("text"),
                 )
                 update_obj = UpdateObject(message=update_msg)
