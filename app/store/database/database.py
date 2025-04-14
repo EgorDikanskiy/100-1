@@ -32,7 +32,6 @@ class Database:
 
         database_url = f"postgresql+asyncpg://{self.app.config.database.user}:{self.app.config.database.password}@{self.app.config.database.host}/{self.app.config.database.database}"
         self.engine = create_async_engine(database_url, echo=True, future=True)
-        self.session = async_sessionmaker(self.engine, expire_on_commit=False)
 
     async def disconnect(self, *args: Any, **kwargs: Any) -> None:
         if self.engine:
