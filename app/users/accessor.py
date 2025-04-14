@@ -1,3 +1,28 @@
-class UserAccessor:
-    def __init__(self, config) -> None:
-        self.config = config
+from sqlalchemy import select
+from app.base.base_accessor import BaseAccessor
+from app.users.models import UserModel, User
+
+
+class UserAccessor(BaseAccessor):
+    async def create_user(self, tg_id: int, first_name: str) -> User:
+        async with self.app.database.session() as session:
+            user = UserModel(
+                tg_id=tg_id,
+                first_name=first_name,
+            )
+            session.add(user)
+            await session.commit()
+            return user.to_data()
+        
+    async def get_user_by_tg_id(self, tg_id: int) -> User | None:
+        async with self.app.database.session() as session:
+            q = select(UserModel).where(UserModel.tg_id == tg_id)
+            result = await session.execute(q)
+            user = result.scalars().first()
+            if user:
+                return user.to_data()
+
+
+        
+    
+

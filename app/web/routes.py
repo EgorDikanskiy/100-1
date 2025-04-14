@@ -8,4 +8,4 @@ def setup_routes(application: Application):
     from app.admin.routes import setup_routes as admin_setup_routes
 
     admin_setup_routes(application)
-    app.users.routes.register_urls(application)
+    app.users.routes.setup_routes(application)
