@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from app.store.database.sqlalchemy_base import BaseModel
 
 from sqlalchemy import Column, BigInteger, String, Boolean, ForeignKey, Integer
+from sqlalchemy.orm import relationship
 
 
 @dataclass
@@ -16,6 +17,8 @@ class UserModel(BaseModel):
     id = Column(BigInteger, primary_key=True)
     tg_id = Column(Integer, nullable=False)
     first_name = Column(String, nullable=False)
+
+    game_scores = relationship("GameScoreModel", back_populates="player")
 
     def to_data(self) -> User:
         return UserModel(

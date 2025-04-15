@@ -3,7 +3,7 @@ from aiohttp.web_exceptions import HTTPBadRequest, HTTPConflict, HTTPNotFound
 from aiohttp_apispec import request_schema, response_schema
 from app.web.app import View
 from app.web.utils import json_response
-from app.game.schemes import GameSchema
+from app.game.schemes import GameSchema, GameScoreSchema
 
 
 class GameAddView(View):
@@ -52,5 +52,30 @@ class GamePatchView(View):
             raise HTTPNotFound(text=f"Game with chat_id {chat_id} not found.")
 
         return json_response(data=GameSchema().dump(updated_game))
+    
+    
+class GameScoreAddView(View):
+    @request_schema(GameScoreSchema)
+    @response_schema(GameScoreSchema, 200)
+    async def post(self):
+        data = await self.request.json()
+        try:
+            score = await self.store.game_scores.create_game_score(
+               player_id=data["player_id"],
+               game_id=data["game_id"],
+            )
+            return json_response(data=GameScoreSchema().dump(score))
+        except ValueError as e:
+            raise HTTPConflict(text=str(e))
+
+
+class GameScoreListView(View):
+    @response_schema(GameScoreSchema(many=True), 200)
+    async def get(self):
+        game_id_str = self.request.query.get("game_id")
+        if not game_id_str or not game_id_str.isdigit():
+            raise HTTPNotFound(text="Missing or invalid game_id")
+        scores = await self.store.game_scores.get_scores_by_game(int(game_id_str))
+        return json_response(data=GameScoreSchema(many=True).dump(scores))
 
         

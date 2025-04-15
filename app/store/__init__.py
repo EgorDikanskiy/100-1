@@ -12,7 +12,7 @@ class Store:
         from app.store.bot.manager import BotManager
         from app.store.tg_api.accessor import TelegramApiAccessor
         from app.users.accessor import UserAccessor
-        from app.game.accessor import GameAccessor
+        from app.game.accessor import GameAccessor, GameScoreAccessor
         from app.questions.accessors import QuestionAccessor, AnswerAccessor
 
         self.admins = AdminAccessor(app)
@@ -20,6 +20,7 @@ class Store:
         self.bots_manager = BotManager(app)
         self.users = UserAccessor(app)
         self.game = GameAccessor(app)
+        self.game_scores = GameScoreAccessor(app)
         self.questions = QuestionAccessor(app)
         self.answers = AnswerAccessor(app)
 
