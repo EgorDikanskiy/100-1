@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy import select
 from app.base.base_accessor import BaseAccessor
-from app.game.models import GameModel, Game, GameScore, GameScoreModel
+from app.game.models import GameModel, Game, GameRound, GameRoundModel, GameScore, GameScoreModel, RoundQuestion, RoundQuestionAnswer, RoundQuestionAnswerModel, RoundQuestionModel
 
 class GameAccessor(BaseAccessor):
     async def create_game(self, chat_id: int, is_active: bool, created_at: datetime) -> Game:
@@ -73,3 +73,82 @@ class GameScoreAccessor(BaseAccessor):
                 game_score.score = new_score
                 await session.commit()
                 return game_score.to_data()
+            
+
+class GameRoundAccessor(BaseAccessor):
+    async def create_game_round(
+        self, game_id: int, question_id: int, created_at: datetime
+    ) -> GameRound:
+        async with self.app.database.session() as session:
+            game_round = GameRoundModel(
+                game_id=game_id,
+                question_id=question_id,
+                current_player_id=None,
+                is_active=True,
+                created_at=created_at,
+            )
+            session.add(game_round)
+            await session.commit()
+            return game_round.to_data()
+
+    async def get_game_round(self, round_id: int) -> GameRound | None:
+        async with self.app.database.session() as session:
+            q = select(GameRoundModel).where(GameRoundModel.id == round_id)
+            result = await session.execute(q)
+            model = result.scalars().first()
+            return model.to_data() if model else None
+
+    async def update_round_active_status(self, round_id: int, current_player_id: int, is_active: bool = True) -> GameRound | None:
+        async with self.app.database.session() as session:
+            q = select(GameRoundModel).where(GameRoundModel.id == round_id)
+            result = await session.execute(q)
+            model = result.scalars().first()
+            if model:
+                model.current_player_id = current_player_id
+                model.is_active = is_active
+                await session.commit()
+                return model.to_data()
+            
+class RoundQuestionAccessor(BaseAccessor):
+    async def create_round_question(self, round_id: int, question_id: int, is_found: bool = False) -> RoundQuestion:
+        async with self.app.database.session() as session:
+            rq = RoundQuestionModel(
+                round_id=round_id,
+                question_id=question_id,
+                is_found=is_found,
+            )
+            session.add(rq)
+            await session.commit()
+            await session.refresh(rq)
+            return rq.to_data()
+
+    async def get_round_question_by_id(self, rq_id: int) -> RoundQuestion | None:
+        async with self.app.database.session() as session:
+            result = await session.execute(select(RoundQuestionModel).where(RoundQuestionModel.id == rq_id))
+            model = result.scalars().first()
+            if model:
+                question = model.to_data()
+                question.answers = [answer.to_data() for answer in model.answers]
+                return question
+            return None
+
+
+class RoundQuestionAnswerAccessor(BaseAccessor):
+    async def create_round_question_answer(self, round_question_id: int, answer_id: int, is_found: bool = False) -> RoundQuestionAnswer:
+        async with self.app.database.session() as session:
+            rqa = RoundQuestionAnswerModel(
+                round_question_id=round_question_id,
+                answer_id=answer_id,
+                is_found=is_found,
+            )
+            session.add(rqa)
+            await session.commit()
+            await session.refresh(rqa)
+            return rqa.to_data()
+
+    async def get_answers_by_round_question(self, round_question_id: int) -> list[RoundQuestionAnswer]:
+        async with self.app.database.session() as session:
+            q = select(RoundQuestionAnswerModel).where(RoundQuestionAnswerModel.round_question_id == round_question_id)
+            result = await session.execute(q)
+            models = result.scalars().all()
+            return [m.to_data() for m in models]
