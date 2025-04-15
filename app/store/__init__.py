@@ -12,11 +12,16 @@ class Store:
         from app.store.bot.manager import BotManager
         from app.store.tg_api.accessor import TelegramApiAccessor
         from app.users.accessor import UserAccessor
+        from app.game.accessor import GameAccessor
+        from app.questions.accessors import QuestionAccessor, AnswerAccessor
 
         self.admins = AdminAccessor(app)
         self.tg_api = TelegramApiAccessor(app)
         self.bots_manager = BotManager(app)
         self.users = UserAccessor(app)
+        self.game = GameAccessor(app)
+        self.questions = QuestionAccessor(app)
+        self.answers = AnswerAccessor(app)
 
 
 def setup_store(app: "Application"):
