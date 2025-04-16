@@ -112,7 +112,7 @@ class GameRoundUpdateView(View):
         round_id = data.get("round_id")
         current_player_id = data.get('current_player_id', None)
         new_status = data.get("is_active", True)
-        updated = await self.store.game_rounds.update_round_active_status(
+        updated = await self.store.game_rounds.update_round(
             round_id=round_id,
             current_player_id=current_player_id,
             is_active=new_status

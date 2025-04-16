@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import select
 from app.base.base_accessor import BaseAccessor
 from app.game.models import GameModel, Game, GameRound, GameRoundModel, GameScore, GameScoreModel, RoundQuestion, RoundQuestionAnswer, RoundQuestionAnswerModel, RoundQuestionModel
+from app.questions.models import AnswerModel
 
 class GameAccessor(BaseAccessor):
     async def create_game(self, chat_id: int, is_active: bool, created_at: datetime) -> Game:
@@ -63,16 +64,44 @@ class GameScoreAccessor(BaseAccessor):
             )
             return [game_score.to_data() for game_score in result.scalars().all()]
 
-    async def update_score(self, score_id: int, new_score: int) -> GameScore | None:
+    async def update_score(self, player_id: int, new_score: int) -> GameScore | None:
         async with self.app.database.session() as session:
             result = await session.execute(
-                select(GameScoreModel).where(GameScoreModel.id == score_id)
+                select(GameScoreModel).where(GameScoreModel.player_id == player_id)
             )
             game_score = result.scalars().first()
             if game_score:
                 game_score.score = new_score
                 await session.commit()
                 return game_score.to_data()
+            
+    async def get_player_status(self, player_id: int, game_id: int) -> bool:
+        async with self.app.database.session() as session:
+            result = await session.execute(
+                select(GameScoreModel.is_active).where(
+                    GameScoreModel.player_id == player_id,
+                    GameScoreModel.game_id == game_id
+                )
+            )
+            status = result.scalars().first()
+            if status:
+                return True
+            return False
+        
+    async def update_player_status(self, player_id: int, game_id: int, new_status: bool) -> GameScore | None:
+        async with self.app.database.session() as session:
+            result = await session.execute(
+                select(GameScoreModel).where(
+                    GameScoreModel.player_id == player_id,
+                    GameScoreModel.game_id == game_id
+                )
+            )
+            game_score = result.scalars().first()
+            if game_score:
+                game_score.is_active = new_status
+                await session.commit()
+                return game_score.to_data()
+            return None
             
 
 class GameRoundAccessor(BaseAccessor):
@@ -98,7 +127,7 @@ class GameRoundAccessor(BaseAccessor):
             model = result.scalars().first()
             return model.to_data() if model else None
 
-    async def update_round_active_status(self, round_id: int, current_player_id: int, is_active: bool = True) -> GameRound | None:
+    async def update_round(self, round_id: int, current_player_id: int, is_active: bool = True) -> GameRound | None:
         async with self.app.database.session() as session:
             q = select(GameRoundModel).where(GameRoundModel.id == round_id)
             result = await session.execute(q)
@@ -131,6 +160,27 @@ class RoundQuestionAccessor(BaseAccessor):
                 question.answers = [answer.to_data() for answer in model.answers]
                 return question
             return None
+    
+    async def check_round_question_status(self, round_question_id: int) -> bool:
+        async with self.app.database.session() as session:
+            result = await session.execute(
+                select(RoundQuestionAnswerModel.is_found)
+                .where(RoundQuestionAnswerModel.round_question_id == round_question_id)
+            )
+            statuses = result.scalars().all()
+
+            if any(status is False for status in statuses):
+                return True
+            else:
+                rq_result = await session.execute(
+                    select(RoundQuestionModel)
+                    .where(RoundQuestionModel.id == round_question_id)
+                )
+                round_question_model = rq_result.scalars().first()
+                if round_question_model:
+                    round_question_model.is_found = True
+                    await session.commit()
+                return False
 
 
 class RoundQuestionAnswerAccessor(BaseAccessor):
@@ -152,3 +202,35 @@ class RoundQuestionAnswerAccessor(BaseAccessor):
             result = await session.execute(q)
             models = result.scalars().all()
             return [m.to_data() for m in models]
+
+    async def update_answer_status(self, round_question_answer_id: int, new_status: bool) -> RoundQuestionAnswer | None:
+        async with self.app.database.session() as session:
+            result = await session.execute(
+                select(RoundQuestionAnswerModel).where(RoundQuestionAnswerModel.id == round_question_answer_id)
+            )
+            rqa_model = result.scalars().first()
+            if rqa_model:
+                rqa_model.is_found = new_status
+                await session.commit()
+                await session.refresh(rqa_model)
+                return rqa_model.to_data()
+            return None
+        
+    async def check_user_answer_in_not_found(self, round_question_id: int, user_answer: str) -> bool:
+        async with self.app.database.session() as session:
+            q = (
+                select(RoundQuestionAnswerModel)
+                .join(RoundQuestionAnswerModel.answer)
+                .where(
+                    RoundQuestionAnswerModel.round_question_id == round_question_id,
+                    RoundQuestionAnswerModel.is_found == False,
+                    AnswerModel.word.ilike(user_answer)
+                )
+            )
+            result = await session.execute(q)
+            rqa_model = result.scalars().first()
+            if rqa_model is not None:
+                rqa_model.is_found = True
+                await session.commit()
+                return True
+            return False
