@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from app.store.database.sqlalchemy_base import BaseModel
 
-from sqlalchemy import Column, BigInteger, String, Boolean, ForeignKey, Integer
+from sqlalchemy import BigInteger, Column, Integer, String
 from sqlalchemy.orm import relationship
+
+from app.store.database.sqlalchemy_base import BaseModel
 
 
 @dataclass
@@ -10,6 +11,7 @@ class User:
     id: int | None
     tg_id: int
     first_name: str
+
 
 class UserModel(BaseModel):
     __tablename__ = "users"

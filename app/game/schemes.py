@@ -1,5 +1,6 @@
 from marshmallow import Schema, fields
 
+
 class GameSchema(Schema):
     id = fields.Int(required=False)
     chat_id = fields.Int(required=True)
@@ -36,6 +37,6 @@ class RoundQuestionSchema(Schema):
     round_id = fields.Int(required=True)
     question_id = fields.Int(required=True)
     is_found = fields.Bool(required=False)
-    answers = fields.List(fields.Nested(RoundQuestionAnswerSchema), dump_only=True)
-
-
+    answers = fields.List(
+        fields.Nested(RoundQuestionAnswerSchema), dump_only=True
+    )

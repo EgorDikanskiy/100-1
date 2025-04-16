@@ -1,10 +1,11 @@
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from app.store.database.sqlalchemy_base import BaseModel
+from datetime import datetime
 
-from sqlalchemy import Column, ForeignKey, Integer, Boolean, DateTime
-from sqlalchemy.schema import UniqueConstraint
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer
 from sqlalchemy.orm import relationship
+from sqlalchemy.schema import UniqueConstraint
+
+from app.store.database.sqlalchemy_base import BaseModel
 
 
 @dataclass
@@ -23,8 +24,18 @@ class GameModel(BaseModel):
     is_active = Column(Boolean, nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False)
 
-    scores = relationship("GameScoreModel", back_populates="game", cascade="all, delete", lazy="selectin")
-    rounds = relationship("GameRoundModel", back_populates="game", cascade="all, delete-orphan", lazy="selectin")
+    scores = relationship(
+        "GameScoreModel",
+        back_populates="game",
+        cascade="all, delete",
+        lazy="selectin",
+    )
+    rounds = relationship(
+        "GameRoundModel",
+        back_populates="game",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
 
     def to_data(self) -> Game:
         return Game(
@@ -33,7 +44,8 @@ class GameModel(BaseModel):
             is_active=self.is_active,
             created_at=self.created_at,
         )
-    
+
+
 @dataclass
 class GameScore:
     id: int | None
@@ -55,7 +67,9 @@ class GameScoreModel(BaseModel):
     player = relationship("UserModel", lazy="selectin")
     game = relationship("GameModel", back_populates="scores", lazy="selectin")
 
-    __table_args__ = (UniqueConstraint("player_id", "game_id", name="uix_player_game"),)
+    __table_args__ = (
+        UniqueConstraint("player_id", "game_id", name="uix_player_game"),
+    )
 
     def to_data(self) -> GameScore:
         return GameScore(
@@ -63,9 +77,10 @@ class GameScoreModel(BaseModel):
             player_id=self.player_id,
             game_id=self.game_id,
             score=self.score,
-            is_active=self.is_active
+            is_active=self.is_active,
         )
-    
+
+
 @dataclass
 class GameRound:
     id: int | None
@@ -93,7 +108,7 @@ class GameRoundModel(BaseModel):
         back_populates="game_round",
         cascade="all, delete-orphan",
         lazy="selectin",
-        primaryjoin="GameRoundModel.id == RoundQuestionModel.round_id"
+        primaryjoin="GameRoundModel.id == RoundQuestionModel.round_id",
     )
 
     def to_data(self) -> GameRound:
@@ -103,16 +118,17 @@ class GameRoundModel(BaseModel):
             question_id=self.question_id,
             current_player_id=self.current_player_id,
             is_active=self.is_active,
-            created_at=self.created_at
+            created_at=self.created_at,
         )
-    
+
+
 @dataclass
 class RoundQuestion:
     id: int | None
     round_id: int
     question_id: int
     is_found: bool
-    answers: list['RoundQuestionAnswer'] | None = None
+    answers: list["RoundQuestionAnswer"] | None = None
 
 
 class RoundQuestionModel(BaseModel):
@@ -123,10 +139,16 @@ class RoundQuestionModel(BaseModel):
     question_id = Column(Integer, ForeignKey("questions.id"), nullable=False)
     is_found = Column(Boolean, default=False, nullable=False)
 
-
-    game_round = relationship("GameRoundModel", back_populates="round_questions", lazy="selectin")
+    game_round = relationship(
+        "GameRoundModel", back_populates="round_questions", lazy="selectin"
+    )
     question = relationship("QuestionModel", lazy="selectin")
-    answers = relationship("RoundQuestionAnswerModel", back_populates="round_question", cascade="all, delete-orphan", lazy="selectin")
+    answers = relationship(
+        "RoundQuestionAnswerModel",
+        back_populates="round_question",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
 
     def to_data(self) -> RoundQuestion:
         return RoundQuestion(
@@ -134,8 +156,9 @@ class RoundQuestionModel(BaseModel):
             round_id=self.round_id,
             question_id=self.question_id,
             is_found=self.is_found,
-            answers=[]
+            answers=[],
         )
+
 
 @dataclass
 class RoundQuestionAnswer:
@@ -149,12 +172,15 @@ class RoundQuestionAnswerModel(BaseModel):
     __tablename__ = "round_question_answers"
 
     id = Column(Integer, primary_key=True)
-    round_question_id = Column(Integer, ForeignKey("round_questions.id"), nullable=False)
+    round_question_id = Column(
+        Integer, ForeignKey("round_questions.id"), nullable=False
+    )
     answer_id = Column(Integer, ForeignKey("answers.id"), nullable=False)
     is_found = Column(Boolean, default=False, nullable=False)
 
-
-    round_question = relationship("RoundQuestionModel", back_populates="answers", lazy="selectin")
+    round_question = relationship(
+        "RoundQuestionModel", back_populates="answers", lazy="selectin"
+    )
     answer = relationship("AnswerModel", lazy="selectin")
 
     def to_data(self) -> RoundQuestionAnswer:

@@ -1,6 +1,7 @@
 from sqlalchemy import select
+
 from app.base.base_accessor import BaseAccessor
-from app.users.models import UserModel, User
+from app.users.models import User, UserModel
 
 
 class UserAccessor(BaseAccessor):
@@ -13,7 +14,7 @@ class UserAccessor(BaseAccessor):
             session.add(user)
             await session.commit()
             return user.to_data()
-        
+
     async def get_user_by_tg_id(self, tg_id: int) -> User | None:
         async with self.app.database.session() as session:
             q = select(UserModel).where(UserModel.tg_id == tg_id)
@@ -21,8 +22,4 @@ class UserAccessor(BaseAccessor):
             user = result.scalars().first()
             if user:
                 return user.to_data()
-
-
-        
-    
-
+            return None

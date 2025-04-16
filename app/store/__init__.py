@@ -8,12 +8,18 @@ if typing.TYPE_CHECKING:
 
 class Store:
     def __init__(self, app: "Application"):
+        from app.game.accessor import (
+            GameAccessor,
+            GameRoundAccessor,
+            GameScoreAccessor,
+            RoundQuestionAccessor,
+            RoundQuestionAnswerAccessor,
+        )
+        from app.questions.accessors import AnswerAccessor, QuestionAccessor
         from app.store.admin.accessor import AdminAccessor
         from app.store.bot.manager import BotManager
         from app.store.tg_api.accessor import TelegramApiAccessor
         from app.users.accessor import UserAccessor
-        from app.game.accessor import GameAccessor, GameScoreAccessor, GameRoundAccessor, RoundQuestionAccessor, RoundQuestionAnswerAccessor
-        from app.questions.accessors import QuestionAccessor, AnswerAccessor
 
         self.admins = AdminAccessor(app)
         self.tg_api = TelegramApiAccessor(app)

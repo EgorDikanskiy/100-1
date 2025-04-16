@@ -1,35 +1,41 @@
 from dataclasses import dataclass
-from typing import List, Optional
-from app.store.database.sqlalchemy_base import BaseModel
-from sqlalchemy import Column, Integer, String, ForeignKey
+
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
+from app.store.database.sqlalchemy_base import BaseModel
+
 
 @dataclass
 class Answer:
-    id: Optional[int]
+    id: int | None
     question_id: int
     word: str
     score: int
 
+
 @dataclass
 class Question:
-    id: Optional[int]
+    id: int | None
     question: str
-    answers: Optional[List[Answer]] = None
+    answers: [list[Answer]] | None = None
+
 
 class QuestionModel(BaseModel):
     __tablename__ = "questions"
 
     id = Column(Integer, primary_key=True)
     question = Column(String, nullable=False)
-    answers = relationship("AnswerModel", back_populates="question", cascade="all, delete", lazy="selectin")
+    answers = relationship(
+        "AnswerModel",
+        back_populates="question",
+        cascade="all, delete",
+        lazy="selectin",
+    )
 
     def to_data(self) -> Question:
-        return Question(
-            id=self.id,
-            question=self.question,
-            answers=[]
-        )
+        return Question(id=self.id, question=self.question, answers=[])
+
 
 class AnswerModel(BaseModel):
     __tablename__ = "answers"
@@ -39,7 +45,9 @@ class AnswerModel(BaseModel):
     word = Column(String, nullable=False)
     score = Column(Integer, nullable=False)
 
-    question = relationship("QuestionModel", back_populates="answers", lazy="selectin")
+    question = relationship(
+        "QuestionModel", back_populates="answers", lazy="selectin"
+    )
 
     def to_data(self) -> Answer:
         return Answer(

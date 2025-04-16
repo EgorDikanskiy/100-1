@@ -1,6 +1,19 @@
 import typing
 
-from app.game.views import GameAddView, GameGetView, GamePatchView, GameRoundAddView, GameRoundGetView, GameRoundUpdateView, GameScoreAddView, GameScoreListView, RoundQuestionAddView, RoundQuestionAnswerAddView, RoundQuestionAnswerGetView, RoundQuestionGetView
+from app.game.views import (
+    GameAddView,
+    GameGetView,
+    GamePatchView,
+    GameRoundAddView,
+    GameRoundGetView,
+    GameRoundUpdateView,
+    GameScoreAddView,
+    GameScoreListView,
+    RoundQuestionAddView,
+    RoundQuestionAnswerAddView,
+    RoundQuestionAnswerGetView,
+    RoundQuestionGetView,
+)
 
 if typing.TYPE_CHECKING:
     from app.web.app import Application
@@ -17,5 +30,9 @@ def setup_routes(app: "Application"):
     app.router.add_view("/update_game_rounds", GameRoundUpdateView)
     app.router.add_view("/round_questions.add", RoundQuestionAddView)
     app.router.add_view("/round_questions.get", RoundQuestionGetView)
-    app.router.add_view("/round_question_answers.add", RoundQuestionAnswerAddView)
-    app.router.add_view("/round_question_answers.get", RoundQuestionAnswerGetView)
+    app.router.add_view(
+        "/round_question_answers.add", RoundQuestionAnswerAddView
+    )
+    app.router.add_view(
+        "/round_question_answers.get", RoundQuestionAnswerGetView
+    )

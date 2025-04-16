@@ -1,4 +1,5 @@
 from aiohttp.web_app import Application
+
 from app.users.views import UserAddView, UserGetView
 
 __all__ = ("setup_routes",)
