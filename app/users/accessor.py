@@ -23,3 +23,10 @@ class UserAccessor(BaseAccessor):
             if user:
                 return user.to_data()
             return None
+        
+    async def get_all_users(self) -> list[User]:
+        async with self.app.database.session() as session:
+            q = select(UserModel)
+            result = await session.execute(q)
+            users = result.scalars().all()
+            return [user.to_data() for user in users]

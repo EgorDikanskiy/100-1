@@ -12,9 +12,10 @@ class Poller:
 
     def _done_callback(self, result: Future) -> None:
         if result.exception():
-            self.store.app.logger.exception(
-                "Poller stopped with exception", exc_info=result.exception()
-            )
+            # self.store.app.logger.exception(
+            #     "Poller stopped with exception", exc_info=result.exception()
+            # )
+            print(f"Poller stopped with exception {result.exception()}")
         if self.is_running:
             self.start()
 

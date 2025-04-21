@@ -1,5 +1,6 @@
 import typing
 from logging import getLogger
+
 from .dispatcher import CommandDispatcher
 
 if typing.TYPE_CHECKING:
@@ -15,12 +16,12 @@ class BotManager:
     async def handle_updates(self, updates: list["Update"]):
         for update in updates:
             type_update = update.object.message.type
+            print(type_update)
 
             if type_update == 'add_member':
                 await self._handle_new_member(update)
-                continue
-
-            await self.dispatcher.dispatch(update)
+            else:
+                await self.dispatcher.dispatch(update)
 
     async def _handle_new_member(self, update: "Update"):
         tg_id = update.object.message.new_user_tg_id

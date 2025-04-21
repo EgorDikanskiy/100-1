@@ -96,13 +96,12 @@ class GameRoundModel(BaseModel):
 
     id = Column(Integer, primary_key=True)
     game_id = Column(Integer, ForeignKey("games.id"), nullable=False)
-    question_id = Column(Integer, ForeignKey("questions.id"), nullable=True)
-    current_player_id = Column(Integer, nullable=True)
+    question_id = Column(Integer, nullable=True)
+    current_player_id = Column(BigInteger, nullable=True)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), nullable=False)
 
     game = relationship("GameModel", back_populates="rounds")
-    question = relationship("QuestionModel")
     round_questions = relationship(
         "RoundQuestionModel",
         back_populates="game_round",

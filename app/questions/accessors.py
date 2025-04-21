@@ -104,6 +104,15 @@ class AnswerAccessor(BaseAccessor):
             result = await session.execute(q)
             answers = result.scalars().all()
             return [answer.to_data() for answer in answers]
+    
+    async def get_answer_by_word(self, word: str) -> Answer | None:
+        async with self.app.database.session() as session:
+            q = select(AnswerModel).where(func.lower(AnswerModel.word) == word.lower())
+            result = await session.execute(q)
+            model = result.scalars().first()
+            if model:
+                return model.to_data()
+            return None
 
     async def check_answer_by_question_id(
         self, question_id: int, answer: str
@@ -114,4 +123,8 @@ class AnswerAccessor(BaseAccessor):
             )
             result = await session.execute(q)
             answers = result.scalars().all()
-            return answer in answers
+            for el in answers:
+                if answer in el.to_data().word:
+                    return True
+            return False
+    

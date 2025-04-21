@@ -15,7 +15,7 @@ from app.game.models import (
     RoundQuestionAnswerModel,
     RoundQuestionModel,
 )
-from app.questions.models import AnswerModel
+from app.questions.models import AnswerModel, Question
 
 
 class GameAccessor(BaseAccessor):
@@ -76,7 +76,7 @@ class GameScoreAccessor(BaseAccessor):
                 player_id=player_id,
                 game_id=game_id,
                 score=0,
-                is_active=False,
+                is_active=True,
             )
             session.add(game_score)
             await session.commit()
@@ -98,11 +98,11 @@ class GameScoreAccessor(BaseAccessor):
             result = await session.execute(
                 select(GameScoreModel).where(
                     GameScoreModel.player_id == player_id
-                )
+                ).order_by(desc(GameScoreModel.id))
             )
             game_score = result.scalars().first()
             if game_score:
-                game_score.score = new_score
+                game_score.score += new_score
                 await session.commit()
                 return game_score.to_data()
             return None
@@ -155,21 +155,49 @@ class GameRoundAccessor(BaseAccessor):
             result = await session.execute(q)
             models = result.scalars().all()
             return [m.to_data() for m in models]
+    
+    async def get_active_round_by_chat_id(self, chat_id: int) -> GameRound | None:
+        async with self.app.database.session() as session:
+            q_game = select(GameModel).where(GameModel.chat_id == chat_id).order_by(desc(GameModel.id))
+            result_game = await session.execute(q_game)
+            game = result_game.scalars().first()
+
+            if not game:
+                return None
+
+            # ищем активный раунд этой игры
+            q_round = select(GameRoundModel).where(
+                GameRoundModel.game_id == game.id,
+                GameRoundModel.is_active.is_(True)
+            )
+            result_round = await session.execute(q_round)
+            round_model = result_round.scalars().first()
+
+            if round_model:
+                return round_model.to_data()
+            return None
 
     async def update_round(
-        self, round_id: int, current_player_id: int, is_active: bool = True
+        self,
+        round_id: int,
+        current_player_id: int | None = None,
+        is_active: bool | None = None,
+        question_id: int | None = None
     ) -> GameRound | None:
         async with self.app.database.session() as session:
             q = select(GameRoundModel).where(GameRoundModel.id == round_id)
             result = await session.execute(q)
             model = result.scalars().first()
             if model:
-                model.current_player_id = current_player_id
-                model.is_active = is_active
+                if current_player_id is not None:
+                    model.current_player_id = current_player_id
+                if is_active is not None:
+                    model.is_active = is_active
+                if question_id is not None:
+                    model.question_id = question_id
                 await session.commit()
                 return model.to_data()
             return None
-
 
 class RoundQuestionAccessor(BaseAccessor):
     async def create_round_question(
@@ -224,6 +252,27 @@ class RoundQuestionAccessor(BaseAccessor):
                 round_question_model.is_found = True
                 await session.commit()
             return False
+        
+    async def get_question_by_round_question_id(self, rq_id: int) -> Question | None:
+        async with self.app.database.session() as session:
+            # Получаем RoundQuestionModel с нужным id
+            result = await session.execute(
+                select(RoundQuestionModel).where(RoundQuestionModel.id == rq_id)
+            )
+            round_question_model = result.scalars().first()
+
+            if not round_question_model:
+                return None
+
+            # Получаем связанный QuestionModel
+            question_model = round_question_model.question
+            if not question_model:
+                return None
+
+            # Преобразуем в dataclass
+            question = question_model.to_data()
+            question.answers = [answer.to_data() for answer in question_model.answers]
+            return question
 
 
 class RoundQuestionAnswerAccessor(BaseAccessor):

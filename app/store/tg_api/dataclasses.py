@@ -1,11 +1,12 @@
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 
 
 @dataclass
 class Message:
     chat_id: int
     text: str
+    reply_markup: Optional[Any] = None
 
 
 @dataclass
