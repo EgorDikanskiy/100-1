@@ -51,6 +51,7 @@ class TelegramApiAccessor(BaseAccessor):
         params = {
             "offset": self.offset,
             "timeout": 30,
+            "allowed_updates": ["message","chat_member","chat_join_request"]
         }
         url = self._build_query(GET_UPDATES_METHOD, params)
         async with self.session.get(url) as response:
@@ -66,14 +67,26 @@ class TelegramApiAccessor(BaseAccessor):
             updates = []
             for upd in updates_data:
                 message_data = upd.get("message")
-                if not message_data or "text" not in message_data:
+                if not message_data:
                     continue
-                update_msg = UpdateMessage(
-                    id=message_data.get("message_id"),
-                    user_id=message_data.get("from", {}).get("id"),
-                    chat_id=message_data.get("chat", {}).get("id"),
-                    text=message_data.get("text"),
-                )
+                if 'text' in message_data:
+                    update_msg = UpdateMessage(
+                        id=message_data.get("message_id"),
+                        user_id=message_data.get("from", {}).get("id"),
+                        chat_id=message_data.get("chat", {}).get("id"),
+                        text=message_data.get("text"),
+                        type='text'
+                    )
+                elif 'new_chat_member' in message_data:
+                    update_msg = UpdateMessage(
+                        id=message_data.get("message_id"),
+                        chat_id=message_data.get("chat", {}).get("id"),
+                        new_user_tg_id=message_data.get("new_chat_members")[0].get("id"),
+                        new_user_first_name=message_data.get("new_chat_members")[0].get("first_name"),
+                        type='add_member'
+                    )
+                else:
+                    continue
                 update_obj = UpdateObject(message=update_msg)
                 update = Update(type="message", object=update_obj)
                 updates.append(update)

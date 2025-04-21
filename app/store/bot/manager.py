@@ -1,20 +1,40 @@
 import typing
 from logging import getLogger
-
-from app.store.tg_api.dataclasses import Message, Update
+from .dispatcher import CommandDispatcher
 
 if typing.TYPE_CHECKING:
     from app.web.app import Application
-
+    from app.store.tg_api.dataclasses import Update
 
 class BotManager:
     def __init__(self, app: "Application"):
         self.app = app
         self.logger = getLogger("telegram_handler")
+        self.dispatcher = CommandDispatcher(app)
 
-    async def handle_updates(self, updates: list[Update]):
+    async def handle_updates(self, updates: list["Update"]):
         for update in updates:
-            original_text = update.object.message.text
-            chat_id = update.object.message.chat_id
-            echo_message = Message(chat_id=chat_id, text=original_text)
-            await self.app.store.tg_api.send_message(echo_message)
+            type_update = update.object.message.type
+
+            if type_update == 'add_member':
+                await self._handle_new_member(update)
+                continue
+
+            await self.dispatcher.dispatch(update)
+
+    async def _handle_new_member(self, update: "Update"):
+        tg_id = update.object.message.new_user_tg_id
+        first_name = update.object.message.new_user_first_name
+
+        if not await self.app.store.users.get_user_by_tg_id(tg_id):
+            await self.app.store.users.create_user(
+                tg_id=tg_id, first_name=first_name
+            )
+
+                
+
+
+            
+
+
+            

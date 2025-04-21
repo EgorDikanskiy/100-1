@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -10,9 +11,12 @@ class Message:
 @dataclass
 class UpdateMessage:
     chat_id: int
-    user_id: int
-    text: str
     id: int
+    type: str
+    user_id: Optional[int] = None
+    text: Optional[str] = None
+    new_user_tg_id: Optional[int] = None
+    new_user_first_name: Optional[str] = None
 
 
 @dataclass

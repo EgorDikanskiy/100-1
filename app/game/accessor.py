@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import desc, select
 
 from app.base.base_accessor import BaseAccessor
 from app.game.models import (
@@ -34,7 +34,7 @@ class GameAccessor(BaseAccessor):
 
     async def get_game_by_chat_id(self, chat_id: int) -> Game | None:
         async with self.app.database.session() as session:
-            q = select(GameModel).where(GameModel.chat_id == chat_id)
+            q = select(GameModel).where(GameModel.chat_id == chat_id).order_by(desc(GameModel.id))
             result = await session.execute(q)
             game = result.scalars().first()
             if game:
@@ -42,10 +42,10 @@ class GameAccessor(BaseAccessor):
             return None
 
     async def update_game_is_active(
-        self, chat_id: int, new_status: bool
+        self, game_id: int, new_status: bool
     ) -> Game | None:
         async with self.app.database.session() as session:
-            q = select(GameModel).where(GameModel.chat_id == chat_id)
+            q = select(GameModel).where(GameModel.id == game_id)
             result = await session.execute(q)
             game = result.scalars().first()
             if game:
@@ -137,26 +137,24 @@ class GameScoreAccessor(BaseAccessor):
 
 class GameRoundAccessor(BaseAccessor):
     async def create_game_round(
-        self, game_id: int, question_id: int, created_at: datetime
+        self, game_id: int, created_at: datetime
     ) -> GameRound:
         async with self.app.database.session() as session:
             game_round = GameRoundModel(
                 game_id=game_id,
-                question_id=question_id,
-                current_player_id=None,
                 is_active=True,
                 created_at=created_at,
             )
             session.add(game_round)
             await session.commit()
             return game_round.to_data()
-
-    async def get_game_round(self, round_id: int) -> GameRound | None:
+        
+    async def get_game_rounds_by_game_id(self, game_id: int) -> list[GameRound]:
         async with self.app.database.session() as session:
-            q = select(GameRoundModel).where(GameRoundModel.id == round_id)
+            q = select(GameRoundModel).where(GameRoundModel.game_id == game_id)
             result = await session.execute(q)
-            model = result.scalars().first()
-            return model.to_data() if model else None
+            models = result.scalars().all()
+            return [m.to_data() for m in models]
 
     async def update_round(
         self, round_id: int, current_player_id: int, is_active: bool = True

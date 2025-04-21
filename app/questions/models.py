@@ -18,7 +18,7 @@ class Answer:
 class Question:
     id: int | None
     question: str
-    answers: [list[Answer]] | None = None
+    answers: [list[Answer]]
 
 
 class QuestionModel(BaseModel):
