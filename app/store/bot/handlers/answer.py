@@ -49,7 +49,10 @@ class AnswerHandler(BaseCommandHandler):
             answer_id=answer.id,
             new_status=True
         )
-        
+        users = await self.app.store.users.get_all_users()
+        for user in users:
+            await self.app.store.game_scores.update_player_status(user.id, game.id, True)
+            
         await self._send_message("Это правильный ответ")
         
         # Get fresh answers list after updating the status
@@ -66,6 +69,7 @@ class AnswerHandler(BaseCommandHandler):
         await self.app.store.game_rounds.update_round(active_round.id, current_player_id=0)
         await self.app.store.game_scores.update_player_status(user.id, active_round.game_id, False)
         await self._send_message("Это не верный ответ :(")
+        await self._send_message(f"{user.first_name} выбывает")
         
         game_scores = await self.app.store.game_scores.get_scores_by_game(game_id=game.id)
         if any(score.is_active for score in game_scores):

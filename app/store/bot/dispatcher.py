@@ -18,6 +18,11 @@ class CommandDispatcher:
         command = message.text
         msg_type = message.type
 
+        handler_cls = self.handlers.get(command)
+        if handler_cls:
+            handler = handler_cls(app=self.app, update=update)
+            await handler.handle()
+
         if msg_type == 'callback_query':
             handler = WaitCurrentUserHandler(app=self.app, update=update)
             await handler.handle()
@@ -25,9 +30,4 @@ class CommandDispatcher:
         
         if msg_type == 'text':
             handler = AnswerHandler(app=self.app, update=update)
-            await handler.handle()
-
-        handler_cls = self.handlers.get(command)
-        if handler_cls:
-            handler = handler_cls(app=self.app, update=update)
             await handler.handle()

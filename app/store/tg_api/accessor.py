@@ -85,7 +85,7 @@ class TelegramApiAccessor(BaseAccessor):
                     )
 
                 elif message_data and "new_chat_member" in message_data:
-                    new_member = message_data["new_chat_members"][0]
+                    new_member = message_data["new_chat_member"]
                     update_msg = UpdateMessage(
                         id=message_data.get("message_id"),
                         chat_id=message_data.get("chat", {}).get("id"),

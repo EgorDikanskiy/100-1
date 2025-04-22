@@ -20,7 +20,8 @@ class BotManager:
 
             if type_update == 'add_member':
                 await self._handle_new_member(update)
-            else:
+            elif type_update == 'text' or type_update == 'callback_query':
+                print(update)
                 await self.dispatcher.dispatch(update)
 
     async def _handle_new_member(self, update: "Update"):
