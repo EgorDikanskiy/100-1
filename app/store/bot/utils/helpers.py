@@ -11,9 +11,6 @@ async def create_round_with_question(app: "Application", game_id: int, chat_id: 
     )
 
     question = await app.store.questions.get_random_question()
-    users = await app.store.users.get_all_users()
-    # for user in users:
-    #     await app.store.game_scores.create_game_score(user.id, game_id)
     round_question = await app.store.round_questions.create_round_question(
         round_id=round.id, question_id=question.id
     )
@@ -23,5 +20,9 @@ async def create_round_with_question(app: "Application", game_id: int, chat_id: 
         await app.store.round_question_answers.create_round_question_answer(
             round_question_id=round_question.id, answer_id=answer.id
         )
+
+    users = await app.store.users.get_all_users()
+    for user in users:
+        await app.store.game_scores.update_player_status(user.id, round.game_id, True)
 
     return question

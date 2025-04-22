@@ -113,7 +113,7 @@ class GameScoreAccessor(BaseAccessor):
                 select(GameScoreModel.is_active).where(
                     GameScoreModel.player_id == player_id,
                     GameScoreModel.game_id == game_id,
-                )
+                ).order_by(desc(GameScoreModel.id))
             )
             return result.scalars().first()
 
@@ -199,6 +199,7 @@ class GameRoundAccessor(BaseAccessor):
                 return model.to_data()
             return None
 
+
 class RoundQuestionAccessor(BaseAccessor):
     async def create_round_question(
         self, round_id: int, question_id: int, is_found: bool = False
@@ -274,6 +275,24 @@ class RoundQuestionAccessor(BaseAccessor):
             question.answers = [answer.to_data() for answer in question_model.answers]
             return question
 
+    async def update_round_question_status(
+        self, round_question_id: int, is_found: bool = True
+    ) -> RoundQuestion | None:
+        async with self.app.database.session() as session:
+            result = await session.execute(
+                select(RoundQuestionModel).where(
+                    RoundQuestionModel.id == round_question_id
+                )
+            )
+            model = result.scalars().first()
+            if not model:
+                return None
+
+            model.is_found = is_found
+            await session.commit()
+            await session.refresh(model)
+            return model.to_data()
+
 
 class RoundQuestionAnswerAccessor(BaseAccessor):
     async def create_round_question_answer(
@@ -302,12 +321,17 @@ class RoundQuestionAnswerAccessor(BaseAccessor):
             return [m.to_data() for m in models]
 
     async def update_answer_status(
-        self, round_question_answer_id: int, new_status: bool
+        self,
+        round_question_id: int,
+        answer_id: int,
+        new_status: bool
     ) -> RoundQuestionAnswer | None:
         async with self.app.database.session() as session:
             result = await session.execute(
-                select(RoundQuestionAnswerModel).where(
-                    RoundQuestionAnswerModel.id == round_question_answer_id
+                select(RoundQuestionAnswerModel)
+                .where(
+                    RoundQuestionAnswerModel.round_question_id == round_question_id,
+                    RoundQuestionAnswerModel.answer_id == answer_id
                 )
             )
             rqa_model = result.scalars().first()
@@ -317,25 +341,3 @@ class RoundQuestionAnswerAccessor(BaseAccessor):
                 await session.refresh(rqa_model)
                 return rqa_model.to_data()
             return None
-
-    async def check_user_answer_in_not_found(
-        self, round_question_id: int, user_answer: str
-    ) -> bool:
-        async with self.app.database.session() as session:
-            q = (
-                select(RoundQuestionAnswerModel)
-                .join(RoundQuestionAnswerModel.answer)
-                .where(
-                    RoundQuestionAnswerModel.round_question_id
-                    == round_question_id,
-                    not RoundQuestionAnswerModel.is_found,
-                    AnswerModel.word.ilike(user_answer),
-                )
-            )
-            result = await session.execute(q)
-            rqa_model = result.scalars().first()
-            if rqa_model is not None:
-                rqa_model.is_found = True
-                await session.commit()
-                return True
-            return False
