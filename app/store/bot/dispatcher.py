@@ -4,6 +4,7 @@ from app.store.tg_api.dataclasses import Update
 from app.web.app import Application
 from .handlers.start_game import StartGameHandler
 from .handlers.stop_game import StopGameHandler
+from .handlers.rules import RulesHandler
 
 class CommandDispatcher:
     def __init__(self, app: "Application"):
@@ -11,6 +12,10 @@ class CommandDispatcher:
         self.handlers = {
             '/start_game': StartGameHandler,
             '/stop_game': StopGameHandler,
+            '/start_game@StoKOdnomuBot': StartGameHandler,
+            '/stop_game@StoKOdnomuBot': StopGameHandler,
+            '/rules': RulesHandler,
+            '/rules@StoKOdnomuBot': RulesHandler,
         }
 
     async def dispatch(self, update: Update):

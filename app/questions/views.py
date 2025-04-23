@@ -1,12 +1,22 @@
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPNotFound
-from aiohttp_apispec import request_schema, response_schema
+from aiohttp_apispec import request_schema, response_schema, docs
 
 from app.questions.schemes import AnswerSchema, QuestionSchema
 from app.web.app import View
+from app.web.mixins import AuthRequiredMixin
 from app.web.utils import json_response
 
 
-class QuestionAddView(View):
+class QuestionAddView(AuthRequiredMixin, View):
+    @docs(
+        tags=["questions"],
+        summary="Add new question",
+        description="Create a new question with specified text (Admin only)",
+        responses={
+            200: {"description": "Question successfully created"},
+            401: {"description": "Unauthorized - admin not authenticated"}
+        }
+    )
     @request_schema(QuestionSchema)
     @response_schema(QuestionSchema, 200)
     async def post(self):
@@ -19,6 +29,22 @@ class QuestionAddView(View):
 
 
 class QuestionGetView(View):
+    @docs(
+        tags=["questions"],
+        summary="Get question by ID",
+        description="Retrieve question information by ID",
+        parameters=[{
+            "name": "question_id",
+            "in": "query",
+            "required": True,
+            "schema": {"type": "integer"}
+        }],
+        responses={
+            200: {"description": "Question found successfully"},
+            400: {"description": "Invalid question_id parameter"},
+            404: {"description": "Question not found"}
+        }
+    )
     @response_schema(QuestionSchema, 200)
     async def get(self):
         question_id_str = self.request.query.get("question_id")
@@ -38,7 +64,17 @@ class QuestionGetView(View):
         return json_response(data=QuestionSchema().dump(question))
 
 
-class AnswerAddView(View):
+class AnswerAddView(AuthRequiredMixin, View):
+    @docs(
+        tags=["questions"],
+        summary="Add answer to question",
+        description="Add a new answer to a specific question (Admin only)",
+        responses={
+            200: {"description": "Answer successfully added"},
+            401: {"description": "Unauthorized - admin not authenticated"},
+            404: {"description": "Question not found"}
+        }
+    )
     @request_schema(AnswerSchema)
     @response_schema(AnswerSchema, 200)
     async def post(self):
@@ -61,6 +97,22 @@ class AnswerAddView(View):
 
 
 class AnswerGetView(View):
+    @docs(
+        tags=["questions"],
+        summary="Get answers for question",
+        description="Get all answers for a specific question",
+        parameters=[{
+            "name": "question_id",
+            "in": "query",
+            "required": True,
+            "schema": {"type": "integer"}
+        }],
+        responses={
+            200: {"description": "Answers retrieved successfully"},
+            400: {"description": "Invalid question_id parameter"},
+            404: {"description": "Question not found"}
+        }
+    )
     @response_schema(AnswerSchema, 200)
     async def get(self):
         question_id_str = self.request.query.get("question_id")

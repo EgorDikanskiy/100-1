@@ -6,9 +6,6 @@ async def create_round_with_question(app: "Application", game_id: int, chat_id: 
     round = await app.store.game_rounds.create_game_round(
         game_id=game_id, created_at=datetime.now(UTC)
     )
-    await app.store.tg_api.send_message(
-        Message(chat_id=chat_id, text="Раунд создан")
-    )
 
     question = await app.store.questions.get_random_question()
     round_question = await app.store.round_questions.create_round_question(

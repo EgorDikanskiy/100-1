@@ -88,12 +88,11 @@ class AnswerHandler(BaseCommandHandler):
         # Show player statistics
         await self._show_player_statistics(game.id)
         
-        question = await create_round_with_question(
+        await create_round_with_question(
             app=self.app,
             game_id=game.id,
             chat_id=self.chat_id
         )
-        await self._send_message(f"Вопрос: {question.question}")
         await self._send_want_answer_message()
     
     async def _show_player_statistics(self, game_id: int):
@@ -103,9 +102,10 @@ class AnswerHandler(BaseCommandHandler):
             
         stats_message = "Статистика игроков:\n"
         for score in scores:
-            user = await self.app.store.users.get_user_by_id(score.player_id)
-            if user:
-                stats_message += f"{user.first_name}: {score.score}\n"
+            if score.score > 0:
+                user = await self.app.store.users.get_user_by_id(score.player_id)
+                if user:
+                    stats_message += f"{user.first_name}: {score.score}\n"
         
         await self._send_message(stats_message)
     
@@ -115,6 +115,11 @@ class AnswerHandler(BaseCommandHandler):
         )
     
     async def _send_want_answer_message(self):
+        active_round = await self.app.store.game_rounds.get_active_round_by_chat_id(self.chat_id)
+        round_question = await self.app.store.round_questions.get_round_question_by_id(rq_id=active_round.question_id)
+        question = await self.app.store.questions.get_question_by_id(question_id=round_question.question_id)
+        await self._send_message(f"Вопрос: {question.question}")
+
         await self.app.store.tg_api.send_message(
             Message(
                 chat_id=self.chat_id,
