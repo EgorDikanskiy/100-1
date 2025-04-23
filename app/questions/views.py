@@ -165,7 +165,9 @@ class QuestionDeleteView(AuthRequiredMixin, View):
                 "and must be an integer."
             )
         question_id = int(question_id_str)
-        success = await self.store.questions.delete_question(question_id=question_id)
+        success = await self.store.questions.delete_question(
+            question_id=question_id
+        )
         if not success:
             raise HTTPNotFound(
                 text=f"Question with id {question_id} not found."
@@ -202,13 +204,12 @@ class QuestionUpdateView(AuthRequiredMixin, View):
                 "and must be an integer."
             )
         question_id = int(question_id_str)
-        
+
         data = await self.request.json()
         new_text = data["question"]
-        
+
         question = await self.store.questions.update_question(
-            question_id=question_id,
-            new_text=new_text
+            question_id=question_id, new_text=new_text
         )
         if not question:
             raise HTTPNotFound(
@@ -246,9 +247,7 @@ class AnswerDeleteView(AuthRequiredMixin, View):
         answer_id = int(answer_id_str)
         success = await self.store.answers.delete_answer(answer_id=answer_id)
         if not success:
-            raise HTTPNotFound(
-                text=f"Answer with id {answer_id} not found."
-            )
+            raise HTTPNotFound(text=f"Answer with id {answer_id} not found.")
         return json_response(data={"status": "success"})
 
 
@@ -281,18 +280,14 @@ class AnswerUpdateView(AuthRequiredMixin, View):
                 "and must be an integer."
             )
         answer_id = int(answer_id_str)
-        
+
         data = await self.request.json()
         word = data["word"]
         score = data["score"]
-        
+
         answer = await self.store.answers.update_answer(
-            answer_id=answer_id,
-            word=word,
-            score=score
+            answer_id=answer_id, word=word, score=score
         )
         if not answer:
-            raise HTTPNotFound(
-                text=f"Answer with id {answer_id} not found."
-            )
+            raise HTTPNotFound(text=f"Answer with id {answer_id} not found.")
         return json_response(data=AnswerSchema().dump(answer))

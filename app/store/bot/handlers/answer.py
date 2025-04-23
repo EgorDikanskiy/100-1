@@ -18,7 +18,7 @@ class AnswerHandler(BaseCommandHandler):
             )
         )
 
-        if game:
+        if game:  # noqa: SIM102
             if not game.is_active or not active_round:
                 return
 
