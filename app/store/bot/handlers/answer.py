@@ -28,8 +28,10 @@ class AnswerHandler(BaseCommandHandler):
         await self._process_answer(upd.text, user, game, active_round)
 
     async def _process_answer(self, answer_text: str, user, game, active_round):
-        question = await self.app.store.round_questions.get_round_question_by_id(
-            rq_id=active_round.question_id
+        question = (
+            await self.app.store.round_questions.get_round_question_by_id(
+                rq_id=active_round.question_id
+            )
         )
         answer = await self.app.store.answers.get_answer_by_word(
             answer_text, question.question_id
