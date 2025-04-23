@@ -10,5 +10,7 @@ if __name__ == "__main__":
             config_path=os.path.join(
                 os.path.dirname(os.path.realpath(__file__)), "config.yml"
             )
-        )
+        ),
+        host="0.0.0.0",
+        port=8000
     )

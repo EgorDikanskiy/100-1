@@ -18,8 +18,9 @@ class AnswerHandler(BaseCommandHandler):
             )
         )
 
-        if not game.is_active or not active_round:
-            return
+        if game:
+            if not game.is_active or not active_round:
+                return
 
         if upd.user_id != active_round.current_player_id:
             return

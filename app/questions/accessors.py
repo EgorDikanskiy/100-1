@@ -126,3 +126,32 @@ class AnswerAccessor(BaseAccessor):
             result = await session.execute(q)
             answers = result.scalars().all()
             return any(answer in el.to_data().word for el in answers)
+
+    async def delete_answer(self, answer_id: int) -> bool:
+        async with self.app.database.session() as session:
+            result = await session.execute(
+                select(AnswerModel).where(AnswerModel.id == answer_id)
+            )
+            answer_model = result.scalars().first()
+            if not answer_model:
+                return False
+            await session.delete(answer_model)
+            await session.commit()
+            return True
+
+    async def update_answer(
+        self, answer_id: int, word: str, score: int
+    ) -> Answer | None:
+        async with self.app.database.session() as session:
+            result = await session.execute(
+                select(AnswerModel).where(AnswerModel.id == answer_id)
+            )
+            answer_model = result.scalars().first()
+            if not answer_model:
+                return None
+
+            answer_model.word = word
+            answer_model.score = score
+            await session.commit()
+            await session.refresh(answer_model)
+            return answer_model.to_data()

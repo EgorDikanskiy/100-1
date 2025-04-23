@@ -25,11 +25,11 @@ class BotConfig:
 
 @dataclass
 class DatabaseConfig:
-    host: str = "localhost"
-    port: int = 5432
-    user: str = "postgres"
-    password: str = "postgres"
-    database: str = "project"
+    host: str
+    port: int
+    user: str
+    password: str
+    database: str
 
 
 @dataclass
@@ -55,5 +55,11 @@ def setup_config(app: "Application", config_path: str):
         bot=BotConfig(
             token=raw_config["bot"]["token"],
         ),
-        database=DatabaseConfig(**raw_config["database"]),
+        database=DatabaseConfig(
+            host=str(raw_config["database"]["host"]),
+            port=int(raw_config["database"]["port"]),
+            user=str(raw_config["database"]["user"]),
+            password=str(raw_config["database"]["password"]),
+            database=str(raw_config["database"]["database"]),
+        ),
     )
