@@ -49,7 +49,9 @@ class AnswerHandler(BaseCommandHandler):
     async def _process_new_correct_answer(
         self, user, game, active_round, answer, answers
     ):
-        await self.app.store.game_scores.update_score(user.id, game.id, answer.score)
+        await self.app.store.game_scores.update_score(
+            user.id, game.id, answer.score
+        )
         await self.app.store.game_rounds.update_round(
             active_round.id, current_player_id=0
         )
