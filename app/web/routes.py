@@ -6,6 +6,10 @@ __all__ = ("setup_routes",)
 def setup_routes(application: Application):
     import app.users.routes
     from app.admin.routes import setup_routes as admin_setup_routes
+    from app.game.routes import setup_routes as game_setup_routes
+    from app.questions.routes import setup_routes as questions_setup_routes
 
     admin_setup_routes(application)
-    app.users.routes.register_urls(application)
+    game_setup_routes(application)
+    questions_setup_routes(application)
+    app.users.routes.setup_routes(application)

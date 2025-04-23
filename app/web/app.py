@@ -3,6 +3,7 @@ from aiohttp.web import (
     Request as AiohttpRequest,
     View as AiohttpView,
 )
+from aiohttp_apispec import setup_aiohttp_apispec
 from aiohttp_session import setup as session_setup
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 
@@ -55,9 +56,9 @@ def setup_app(config_path: str) -> Application:
     setup_config(app, config_path)
     session_setup(app, EncryptedCookieStorage(app.config.session.key))
     setup_routes(app)
-    # setup_aiohttp_apispec(
-    #     app, title="Vk Quiz Bot", url="/docs/json", swagger_path="/docs"
-    # )
+    setup_aiohttp_apispec(
+        app, title="tg 100k1 bot", url="/docs/json", swagger_path="/docs"
+    )
     setup_middlewares(app)
     setup_store(app)
     return app
