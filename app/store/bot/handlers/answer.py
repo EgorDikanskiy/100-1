@@ -36,9 +36,7 @@ class AnswerHandler(BaseCommandHandler):
 
     async def _handle_correct_answer(self, user, game, active_round, answer):
         f = self.app.store.round_question_answers.get_answers_by_round_question
-        answers = await f(
-            round_question_id=active_round.question_id
-        )
+        answers = await f(round_question_id=active_round.question_id)
 
         if answer.id in [ans.answer_id for ans in answers if ans.is_found]:
             await self._send_message("Такой ответ уже был")
@@ -70,9 +68,7 @@ class AnswerHandler(BaseCommandHandler):
 
         # Get fresh answers list after updating the status
         f = self.app.store.round_question_answers.get_answers_by_round_question
-        updated_answers = await f(
-            round_question_id=active_round.question_id
-        )
+        updated_answers = await f(round_question_id=active_round.question_id)
 
         if any(not ans.is_found for ans in updated_answers):
             await self._send_want_answer_message()
