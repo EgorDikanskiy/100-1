@@ -96,12 +96,13 @@ class GameScoreAccessor(BaseAccessor):
             ]
 
     async def update_score(
-        self, player_id: int, new_score: int
+        self, player_id: int, game_id: int, new_score: int
     ) -> GameScore | None:
         async with self.app.database.session() as session:
             result = await session.execute(
                 select(GameScoreModel)
                 .where(GameScoreModel.player_id == player_id)
+                .where(GameScoreModel.game_id == game_id)
                 .order_by(desc(GameScoreModel.id))
             )
             game_score = result.scalars().first()

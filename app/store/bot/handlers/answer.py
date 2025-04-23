@@ -49,7 +49,7 @@ class AnswerHandler(BaseCommandHandler):
     async def _process_new_correct_answer(
         self, user, game, active_round, answer, answers
     ):
-        await self.app.store.game_scores.update_score(user.id, answer.score)
+        await self.app.store.game_scores.update_score(user.id, game.id, answer.score)
         await self.app.store.game_rounds.update_round(
             active_round.id, current_player_id=0
         )
@@ -88,6 +88,12 @@ class AnswerHandler(BaseCommandHandler):
         game_scores = await self.app.store.game_scores.get_scores_by_game(
             game_id=game.id
         )
+        for el in game_scores:
+            if el.player_id != user.id:
+                await self.app.store.game_scores.update_player_status(
+                    el.player_id, game.id, new_status=True
+                )
+
         if any(score.is_active for score in game_scores):
             await self._send_want_answer_message()
         else:
