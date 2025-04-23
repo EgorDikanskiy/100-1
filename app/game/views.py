@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from aiohttp.web_exceptions import HTTPBadRequest, HTTPConflict, HTTPNotFound
-from aiohttp_apispec import request_schema, response_schema, docs
+from aiohttp_apispec import docs, request_schema, response_schema
 
 from app.game.schemes import (
     GameRoundSchema,
@@ -18,11 +18,11 @@ class GameAddView(View):
     @docs(
         tags=["game"],
         summary="Add new game",
-        description="Create a new game with specified chat ID and active status",
+        description="Create a new game",
         responses={
             200: {"description": "Game successfully created"},
-            409: {"description": "Game with this chat ID already exists"}
-        }
+            409: {"description": "Game with this chat ID already exists"},
+        },
     )
     @request_schema(GameSchema)
     @response_schema(GameSchema, 200)
@@ -46,17 +46,19 @@ class GameGetView(View):
         tags=["game"],
         summary="Get game by chat ID",
         description="Retrieve game information by chat ID",
-        parameters=[{
-            "name": "chat_id",
-            "in": "query",
-            "required": True,
-            "schema": {"type": "integer"}
-        }],
+        parameters=[
+            {
+                "name": "chat_id",
+                "in": "query",
+                "required": True,
+                "schema": {"type": "integer"},
+            }
+        ],
         responses={
             200: {"description": "Game found successfully"},
             400: {"description": "Invalid chat_id parameter"},
-            404: {"description": "Game not found"}
-        }
+            404: {"description": "Game not found"},
+        },
     )
     @response_schema(GameSchema, 200)
     async def get(self):
@@ -79,8 +81,8 @@ class GamePatchView(View):
         description="Update game information",
         responses={
             200: {"description": "Game successfully updated"},
-            404: {"description": "Game not found"}
-        }
+            404: {"description": "Game not found"},
+        },
     )
     @request_schema(GameSchema)
     @response_schema(GameSchema, 200)
@@ -105,8 +107,8 @@ class GameScoreAddView(View):
         description="Add a new score for a game",
         responses={
             200: {"description": "Score successfully added"},
-            404: {"description": "Game not found"}
-        }
+            404: {"description": "Game not found"},
+        },
     )
     @request_schema(GameScoreSchema)
     @response_schema(GameScoreSchema, 200)
@@ -127,16 +129,18 @@ class GameScoreListView(View):
         tags=["game"],
         summary="List game scores",
         description="Get all scores for a specific game",
-        parameters=[{
-            "name": "game_id",
-            "in": "query",
-            "required": True,
-            "schema": {"type": "integer"}
-        }],
+        parameters=[
+            {
+                "name": "game_id",
+                "in": "query",
+                "required": True,
+                "schema": {"type": "integer"},
+            }
+        ],
         responses={
             200: {"description": "Scores retrieved successfully"},
-            404: {"description": "Game not found"}
-        }
+            404: {"description": "Game not found"},
+        },
     )
     @response_schema(GameScoreSchema(many=True), 200)
     async def get(self):
@@ -156,8 +160,8 @@ class GameRoundAddView(View):
         description="Add a new round to a game",
         responses={
             200: {"description": "Round successfully added"},
-            404: {"description": "Game not found"}
-        }
+            404: {"description": "Game not found"},
+        },
     )
     @request_schema(GameRoundSchema)
     @response_schema(GameRoundSchema, 200)
@@ -176,16 +180,18 @@ class GameRoundGetView(View):
         tags=["game"],
         summary="Get game round",
         description="Get information about a specific game round",
-        parameters=[{
-            "name": "round_id",
-            "in": "query",
-            "required": True,
-            "schema": {"type": "integer"}
-        }],
+        parameters=[
+            {
+                "name": "round_id",
+                "in": "query",
+                "required": True,
+                "schema": {"type": "integer"},
+            }
+        ],
         responses={
             200: {"description": "Round found successfully"},
-            404: {"description": "Round not found"}
-        }
+            404: {"description": "Round not found"},
+        },
     )
     @response_schema(GameRoundSchema, 200)
     async def get(self):
@@ -208,8 +214,8 @@ class GameRoundUpdateView(View):
         description="Update information about a game round",
         responses={
             200: {"description": "Round successfully updated"},
-            404: {"description": "Round not found"}
-        }
+            404: {"description": "Round not found"},
+        },
     )
     @response_schema(GameRoundSchema, 200)
     async def patch(self):
@@ -234,8 +240,8 @@ class RoundQuestionAddView(View):
         description="Add a new question to a game round",
         responses={
             200: {"description": "Question successfully added"},
-            404: {"description": "Round not found"}
-        }
+            404: {"description": "Round not found"},
+        },
     )
     @request_schema(RoundQuestionSchema)
     @response_schema(RoundQuestionSchema, 200)
@@ -254,16 +260,18 @@ class RoundQuestionGetView(View):
         tags=["game"],
         summary="Get round question",
         description="Get information about a specific question in a round",
-        parameters=[{
-            "name": "question_id",
-            "in": "query",
-            "required": True,
-            "schema": {"type": "integer"}
-        }],
+        parameters=[
+            {
+                "name": "question_id",
+                "in": "query",
+                "required": True,
+                "schema": {"type": "integer"},
+            }
+        ],
         responses={
             200: {"description": "Question found successfully"},
-            404: {"description": "Question not found"}
-        }
+            404: {"description": "Question not found"},
+        },
     )
     @response_schema(RoundQuestionSchema, 200)
     async def get(self):
@@ -287,8 +295,8 @@ class RoundQuestionAnswerAddView(View):
         description="Add an answer to a round question",
         responses={
             200: {"description": "Answer successfully added"},
-            404: {"description": "Question not found"}
-        }
+            404: {"description": "Question not found"},
+        },
     )
     @request_schema(RoundQuestionAnswerSchema)
     @response_schema(RoundQuestionAnswerSchema, 200)
@@ -308,16 +316,18 @@ class RoundQuestionAnswerGetView(View):
         tags=["game"],
         summary="Get question answers",
         description="Get all answers for a specific question",
-        parameters=[{
-            "name": "question_id",
-            "in": "query",
-            "required": True,
-            "schema": {"type": "integer"}
-        }],
+        parameters=[
+            {
+                "name": "question_id",
+                "in": "query",
+                "required": True,
+                "schema": {"type": "integer"},
+            }
+        ],
         responses={
             200: {"description": "Answers retrieved successfully"},
-            404: {"description": "Question not found"}
-        }
+            404: {"description": "Question not found"},
+        },
     )
     @response_schema(RoundQuestionAnswerSchema(many=True), 200)
     async def get(self):

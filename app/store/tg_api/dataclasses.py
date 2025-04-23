@@ -6,7 +6,7 @@ from typing import Any, Optional
 class Message:
     chat_id: int
     text: str
-    reply_markup: Optional[Any] = None
+    reply_markup: Any | None = None
 
 
 @dataclass
@@ -14,10 +14,10 @@ class UpdateMessage:
     chat_id: int
     id: int
     type: str
-    user_id: Optional[int] = None
-    text: Optional[str] = None
-    new_user_tg_id: Optional[int] = None
-    new_user_first_name: Optional[str] = None
+    user_id: int | None = None
+    text: str | None = None
+    new_user_tg_id: int | None = None
+    new_user_first_name: str | None = None
 
 
 @dataclass

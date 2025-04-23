@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sqlalchemy import BigInteger, Column, Integer, String, BIGINT
+from sqlalchemy import BIGINT, BigInteger, Column, String
 from sqlalchemy.orm import relationship
 
 from app.store.database.sqlalchemy_base import BaseModel

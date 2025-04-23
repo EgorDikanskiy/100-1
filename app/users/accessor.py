@@ -23,7 +23,7 @@ class UserAccessor(BaseAccessor):
             if user:
                 return user.to_data()
             return None
-            
+
     async def get_user_by_id(self, user_id: int) -> User | None:
         async with self.app.database.session() as session:
             q = select(UserModel).where(UserModel.id == user_id)
@@ -32,7 +32,7 @@ class UserAccessor(BaseAccessor):
             if user:
                 return user.to_data()
             return None
-        
+
     async def get_all_users(self) -> list[User]:
         async with self.app.database.session() as session:
             q = select(UserModel)

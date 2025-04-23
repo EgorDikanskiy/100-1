@@ -52,7 +52,12 @@ class TelegramApiAccessor(BaseAccessor):
         params = {
             "offset": self.offset,
             "timeout": 30,
-            "allowed_updates": ["message", "callback_query", "chat_member", "chat_join_request"]
+            "allowed_updates": [
+                "message",
+                "callback_query",
+                "chat_member",
+                "chat_join_request",
+            ],
         }
         url = self._build_query(GET_UPDATES_METHOD, params)
         async with self.session.get(url) as response:
@@ -72,8 +77,14 @@ class TelegramApiAccessor(BaseAccessor):
 
                 if callback:
                     cb_msg = callback.get("message", {})
-                    inline_kb = cb_msg.get("reply_markup", {}).get("inline_keyboard", [[]])
-                    button_text = inline_kb[0][0].get("text") if inline_kb and inline_kb[0] else None
+                    inline_kb = cb_msg.get("reply_markup", {}).get(
+                        "inline_keyboard", [[]]
+                    )
+                    button_text = (
+                        inline_kb[0][0].get("text")
+                        if inline_kb and inline_kb[0]
+                        else None
+                    )
                     callback_data = callback.get("data")
 
                     update_msg = UpdateMessage(
@@ -91,7 +102,7 @@ class TelegramApiAccessor(BaseAccessor):
                         chat_id=message_data.get("chat", {}).get("id"),
                         new_user_tg_id=new_member.get("id"),
                         new_user_first_name=new_member.get("first_name"),
-                        type="add_member"
+                        type="add_member",
                     )
 
                 elif message_data and "text" in message_data:
@@ -100,7 +111,7 @@ class TelegramApiAccessor(BaseAccessor):
                         user_id=message_data.get("from", {}).get("id"),
                         chat_id=message_data.get("chat", {}).get("id"),
                         text=message_data.get("text"),
-                        type='text'
+                        type="text",
                     )
 
                 else:
@@ -130,7 +141,7 @@ class TelegramApiAccessor(BaseAccessor):
         params = {
             "chat_id": chat_id,
             "message_id": message_id,
-            "reply_markup": json.dumps({"inline_keyboard": []})
+            "reply_markup": json.dumps({"inline_keyboard": []}),
         }
         url = self._build_query("editMessageReplyMarkup", params)
         async with self.session.get(url) as response:

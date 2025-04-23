@@ -15,7 +15,7 @@ from app.game.models import (
     RoundQuestionAnswerModel,
     RoundQuestionModel,
 )
-from app.questions.models import AnswerModel, Question
+from app.questions.models import Question
 
 
 class GameAccessor(BaseAccessor):
@@ -34,7 +34,11 @@ class GameAccessor(BaseAccessor):
 
     async def get_game_by_chat_id(self, chat_id: int) -> Game | None:
         async with self.app.database.session() as session:
-            q = select(GameModel).where(GameModel.chat_id == chat_id).order_by(desc(GameModel.id))
+            q = (
+                select(GameModel)
+                .where(GameModel.chat_id == chat_id)
+                .order_by(desc(GameModel.id))
+            )
             result = await session.execute(q)
             game = result.scalars().first()
             if game:
@@ -96,9 +100,9 @@ class GameScoreAccessor(BaseAccessor):
     ) -> GameScore | None:
         async with self.app.database.session() as session:
             result = await session.execute(
-                select(GameScoreModel).where(
-                    GameScoreModel.player_id == player_id
-                ).order_by(desc(GameScoreModel.id))
+                select(GameScoreModel)
+                .where(GameScoreModel.player_id == player_id)
+                .order_by(desc(GameScoreModel.id))
             )
             game_score = result.scalars().first()
             if game_score:
@@ -110,10 +114,12 @@ class GameScoreAccessor(BaseAccessor):
     async def get_player_status(self, player_id: int, game_id: int) -> bool:
         async with self.app.database.session() as session:
             result = await session.execute(
-                select(GameScoreModel.is_active).where(
+                select(GameScoreModel.is_active)
+                .where(
                     GameScoreModel.player_id == player_id,
                     GameScoreModel.game_id == game_id,
-                ).order_by(desc(GameScoreModel.id))
+                )
+                .order_by(desc(GameScoreModel.id))
             )
             return result.scalars().first()
 
@@ -148,17 +154,23 @@ class GameRoundAccessor(BaseAccessor):
             session.add(game_round)
             await session.commit()
             return game_round.to_data()
-        
+
     async def get_game_rounds_by_game_id(self, game_id: int) -> list[GameRound]:
         async with self.app.database.session() as session:
             q = select(GameRoundModel).where(GameRoundModel.game_id == game_id)
             result = await session.execute(q)
             models = result.scalars().all()
             return [m.to_data() for m in models]
-    
-    async def get_active_round_by_chat_id(self, chat_id: int) -> GameRound | None:
+
+    async def get_active_round_by_chat_id(
+        self, chat_id: int
+    ) -> GameRound | None:
         async with self.app.database.session() as session:
-            q_game = select(GameModel).where(GameModel.chat_id == chat_id).order_by(desc(GameModel.id))
+            q_game = (
+                select(GameModel)
+                .where(GameModel.chat_id == chat_id)
+                .order_by(desc(GameModel.id))
+            )
             result_game = await session.execute(q_game)
             game = result_game.scalars().first()
 
@@ -168,7 +180,7 @@ class GameRoundAccessor(BaseAccessor):
             # ищем активный раунд этой игры
             q_round = select(GameRoundModel).where(
                 GameRoundModel.game_id == game.id,
-                GameRoundModel.is_active.is_(True)
+                GameRoundModel.is_active.is_(True),
             )
             result_round = await session.execute(q_round)
             round_model = result_round.scalars().first()
@@ -182,7 +194,7 @@ class GameRoundAccessor(BaseAccessor):
         round_id: int,
         current_player_id: int | None = None,
         is_active: bool | None = None,
-        question_id: int | None = None
+        question_id: int | None = None,
     ) -> GameRound | None:
         async with self.app.database.session() as session:
             q = select(GameRoundModel).where(GameRoundModel.id == round_id)
@@ -253,8 +265,10 @@ class RoundQuestionAccessor(BaseAccessor):
                 round_question_model.is_found = True
                 await session.commit()
             return False
-        
-    async def get_question_by_round_question_id(self, rq_id: int) -> Question | None:
+
+    async def get_question_by_round_question_id(
+        self, rq_id: int
+    ) -> Question | None:
         async with self.app.database.session() as session:
             # Получаем RoundQuestionModel с нужным id
             result = await session.execute(
@@ -272,7 +286,9 @@ class RoundQuestionAccessor(BaseAccessor):
 
             # Преобразуем в dataclass
             question = question_model.to_data()
-            question.answers = [answer.to_data() for answer in question_model.answers]
+            question.answers = [
+                answer.to_data() for answer in question_model.answers
+            ]
             return question
 
     async def update_round_question_status(
@@ -321,17 +337,14 @@ class RoundQuestionAnswerAccessor(BaseAccessor):
             return [m.to_data() for m in models]
 
     async def update_answer_status(
-        self,
-        round_question_id: int,
-        answer_id: int,
-        new_status: bool
+        self, round_question_id: int, answer_id: int, new_status: bool
     ) -> RoundQuestionAnswer | None:
         async with self.app.database.session() as session:
             result = await session.execute(
-                select(RoundQuestionAnswerModel)
-                .where(
-                    RoundQuestionAnswerModel.round_question_id == round_question_id,
-                    RoundQuestionAnswerModel.answer_id == answer_id
+                select(RoundQuestionAnswerModel).where(
+                    RoundQuestionAnswerModel.round_question_id
+                    == round_question_id,
+                    RoundQuestionAnswerModel.answer_id == answer_id,
                 )
             )
             rqa_model = result.scalars().first()

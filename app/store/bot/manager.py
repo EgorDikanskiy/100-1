@@ -4,8 +4,9 @@ from logging import getLogger
 from .dispatcher import CommandDispatcher
 
 if typing.TYPE_CHECKING:
-    from app.web.app import Application
     from app.store.tg_api.dataclasses import Update
+    from app.web.app import Application
+
 
 class BotManager:
     def __init__(self, app: "Application"):
@@ -16,12 +17,10 @@ class BotManager:
     async def handle_updates(self, updates: list["Update"]):
         for update in updates:
             type_update = update.object.message.type
-            print(type_update)
 
-            if type_update == 'add_member':
+            if type_update == "add_member":
                 await self._handle_new_member(update)
-            elif type_update == 'text' or type_update == 'callback_query':
-                print(update)
+            elif type_update == "text" or type_update == "callback_query":
                 await self.dispatcher.dispatch(update)
 
     async def _handle_new_member(self, update: "Update"):
@@ -32,11 +31,3 @@ class BotManager:
             await self.app.store.users.create_user(
                 tg_id=tg_id, first_name=first_name
             )
-
-                
-
-
-            
-
-
-            

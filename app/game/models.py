@@ -1,7 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, BigInteger
+from sqlalchemy import (
+    BigInteger,
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
 

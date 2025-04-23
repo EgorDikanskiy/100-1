@@ -1,5 +1,5 @@
 from aiohttp.web_exceptions import HTTPForbidden
-from aiohttp_apispec import request_schema, response_schema, docs
+from aiohttp_apispec import docs, request_schema, response_schema
 from aiohttp_session import new_session
 
 from app.admin.schemes import AdminRequestSchema, AdminResponseSchema
@@ -15,8 +15,8 @@ class AdminLoginView(View):
         description="Authenticate admin user with email and password",
         responses={
             200: {"description": "Successfully authenticated"},
-            403: {"description": "Invalid credentials"}
-        }
+            403: {"description": "Invalid credentials"},
+        },
     )
     @request_schema(AdminRequestSchema)
     @response_schema(AdminResponseSchema, 200)
@@ -41,8 +41,8 @@ class AdminCurrentView(AuthRequiredMixin, View):
         description="Get information about currently authenticated admin",
         responses={
             200: {"description": "Successfully retrieved admin info"},
-            401: {"description": "Unauthorized - admin not authenticated"}
-        }
+            401: {"description": "Unauthorized - admin not authenticated"},
+        },
     )
     @response_schema(AdminResponseSchema, 200)
     async def get(self):

@@ -1,5 +1,6 @@
 from app.store.tg_api.dataclasses import Message, Update
 from app.web.app import Application
+
 from ..base import BaseCommandHandler
 
 
@@ -8,8 +9,7 @@ class RulesHandler(BaseCommandHandler):
         super().__init__(app, update)
 
     async def handle(self):
-        rules_text = (
-            """🎲 Правила игры «Сто к одному» для Telegram-бота
+        rules_text = """🎲 Правила игры «Сто к одному» для Telegram-бота
 
 1. Объявляется вопрос.
 Бот публикует новый вопрос в чат.
@@ -33,7 +33,6 @@ class RulesHandler(BaseCommandHandler):
 /stop_game — завершить текущую игру
 
 Удачи и пусть победит сильнейший! 🎉"""
-        )
         await self.app.store.tg_api.send_message(
             Message(chat_id=self.chat_id, text=rules_text)
         )
