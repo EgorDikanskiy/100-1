@@ -1,9 +1,10 @@
 from datetime import UTC, datetime
+import asyncio
 
 from app.store.tg_api.dataclasses import Message
 
 from ..base import BaseCommandHandler
-from ..constants import want_answer_keyboard
+from ..constants import want_answer_keyboard, join_game_keyboard
 from ..utils.helpers import create_round_with_question
 
 
@@ -21,29 +22,50 @@ class StartGameHandler(BaseCommandHandler):
                 is_active=True,
                 created_at=datetime.now(UTC),
             )
-            users = await self.app.store.users.get_all_users()
-            for user in users:
-                await self.app.store.game_scores.create_game_score(
-                    user.id, game.id
-                )
-            await self.app.store.tg_api.send_message(
-                Message(chat_id=self.chat_id, text="Игра началась")
-            )
-            question = await create_round_with_question(
-                app=self.app, game_id=game.id, chat_id=self.chat_id
-            )
-            await self.app.store.tg_api.send_message(
-                Message(
-                    chat_id=self.chat_id, text=f"Вопрос: {question.question}"
-                )
-            )
             await self.app.store.tg_api.send_message(
                 Message(
                     chat_id=self.chat_id,
-                    text="Жмякайте!",
-                    reply_markup=want_answer_keyboard,
+                    text="Начинаем новую игру! Нажмите кнопку ниже, чтобы присоединиться.",
+                    reply_markup=join_game_keyboard
                 )
             )
+            # Start a timer to begin the game after 10 seconds
+            asyncio.create_task(self._start_game_after_delay(game))
+
+    async def _start_game_after_delay(self, game):
+        await asyncio.sleep(10)
+        if not game or not game.is_active:
+            return
+
+        users = await self.app.store.users.get_all_users()
+        if len(users) < 2:
+            await self.app.store.tg_api.send_message(
+                Message(
+                    chat_id=self.chat_id,
+                    text="Недостаточно игроков для начала игры. Нужно минимум 2 игрока."
+                )
+            )
+            await self.app.store.game.update_game_is_active(game.id, False)
+            return
+
+        await self.app.store.tg_api.send_message(
+            Message(chat_id=self.chat_id, text="Игра началась!")
+        )
+        question = await create_round_with_question(
+            app=self.app, game_id=game.id, chat_id=self.chat_id
+        )
+        await self.app.store.tg_api.send_message(
+            Message(
+                chat_id=self.chat_id, text=f"Вопрос: {question.question}"
+            )
+        )
+        await self.app.store.tg_api.send_message(
+            Message(
+                chat_id=self.chat_id,
+                text="Жмякайте!",
+                reply_markup=want_answer_keyboard,
+            )
+        )
 
     async def _handle_active_game(self, game):
         await self.app.store.tg_api.send_message(

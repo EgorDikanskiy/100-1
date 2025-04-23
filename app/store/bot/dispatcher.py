@@ -1,5 +1,6 @@
 from app.store.bot.handlers.answer import AnswerHandler
 from app.store.bot.handlers.wait_current_user import WaitCurrentUserHandler
+from app.store.bot.handlers.join_game import JoinGameHandler
 from app.store.tg_api.dataclasses import Update
 from app.web.app import Application
 
@@ -31,8 +32,12 @@ class CommandDispatcher:
             await handler.handle()
 
         if msg_type == "callback_query":
-            handler = WaitCurrentUserHandler(app=self.app, update=update)
-            await handler.handle()
+            if message.text == "Присоединиться к игре":
+                handler = JoinGameHandler(app=self.app, update=update)
+                await handler.handle()
+            else:
+                handler = WaitCurrentUserHandler(app=self.app, update=update)
+                await handler.handle()
             return
 
         if msg_type == "text":

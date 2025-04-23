@@ -11,3 +11,14 @@ want_answer_keyboard: dict[str, Any] = {
         ]
     ]
 }
+
+join_game_keyboard = {
+    "inline_keyboard": [
+        [
+            {
+                "text": "Присоединиться к игре",
+                "callback_data": "join_game"
+            }
+        ]
+    ]
+}
