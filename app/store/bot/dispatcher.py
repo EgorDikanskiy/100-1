@@ -1,8 +1,8 @@
 from app.store.bot.handlers.answer import AnswerHandler
 from app.store.bot.handlers.answer_request import AnswerRequestHandler
-from app.store.bot.handlers.next_round import NextRoundHandler
 from app.store.bot.handlers.join_game import JoinGameHandler
-from app.store.tg_api.dataclasses import Message, Update
+from app.store.bot.handlers.next_round import NextRoundHandler
+from app.store.tg_api.dataclasses import Update
 from app.web.app import Application
 
 from .handlers.rules import RulesHandler

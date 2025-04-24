@@ -83,8 +83,9 @@ class QuestionAccessor(BaseAccessor):
     async def get_all_questions(self) -> list[Question]:
         async with self.app.database.session() as session:
             result = await session.execute(
-                select(QuestionModel)
-                .options(selectinload(QuestionModel.answers))
+                select(QuestionModel).options(
+                    selectinload(QuestionModel.answers)
+                )
             )
             question_models = result.scalars().all()
             questions = []

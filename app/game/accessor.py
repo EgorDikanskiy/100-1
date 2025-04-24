@@ -312,15 +312,16 @@ class RoundQuestionAccessor(BaseAccessor):
             # First check if all answers are found
             result = await session.execute(
                 select(RoundQuestionAnswerModel.is_found).where(
-                    RoundQuestionAnswerModel.round_question_id == round_question_id
+                    RoundQuestionAnswerModel.round_question_id
+                    == round_question_id
                 )
             )
             statuses = result.scalars().all()
-            
+
             # Only mark as found if all answers are found
             if not all(status is True for status in statuses):
                 return None
-                
+
             result = await session.execute(
                 select(RoundQuestionModel).where(
                     RoundQuestionModel.id == round_question_id

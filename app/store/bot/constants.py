@@ -1,4 +1,3 @@
-import json
 from typing import Any
 
 want_answer_keyboard: dict[str, Any] = {
@@ -14,26 +13,15 @@ want_answer_keyboard: dict[str, Any] = {
 
 join_game_keyboard: dict[str, Any] = {
     "inline_keyboard": [
-        [
-            {
-                "text": "Присоединиться к игре",
-                "callback_data": "join_game"
-            }
-        ]
+        [{"text": "Присоединиться к игре", "callback_data": "join_game"}]
     ]
 }
 
 yes_no_keyboard: dict[str, Any] = {
     "inline_keyboard": [
         [
-            {
-                "text": "Да",
-                "callback_data": "yes_button"
-            },
-            {
-                "text": "Нет",
-                "callback_data": "no_button"
-            }
+            {"text": "Да", "callback_data": "yes_button"},
+            {"text": "Нет", "callback_data": "no_button"},
         ]
     ]
 }

@@ -1,4 +1,3 @@
-from app.store.bot.utils.helpers import create_round_with_question
 from app.store.tg_api.dataclasses import Message
 
 from ..base import BaseCommandHandler
@@ -21,17 +20,21 @@ class AnswerHandler(BaseCommandHandler):
         if game:  # noqa: SIM102
             if not game.is_active or not active_round:
                 return
-    
 
         if user.id != active_round.current_player_id:
             return
-    
 
         await self._process_answer(upd.text, user, game, active_round)
 
     async def _process_answer(self, answer_text: str, user, game, active_round):
-        cur_round_question = await self.app.store.round_questions.get_round_question_by_id(active_round.question_id)
-        question = await self.app.store.questions.get_question_by_id(cur_round_question.question_id)
+        cur_round_question = (
+            await self.app.store.round_questions.get_round_question_by_id(
+                active_round.question_id
+            )
+        )
+        question = await self.app.store.questions.get_question_by_id(
+            cur_round_question.question_id
+        )
         answer = await self.app.store.answers.get_answer_by_word(
             answer_text, question.id
         )
@@ -46,7 +49,7 @@ class AnswerHandler(BaseCommandHandler):
         answers = await f(round_question_id=active_round.question_id)
 
         if answer.id in [ans.answer_id for ans in answers if ans.is_found]:
-            await self._send_message("Такой ответ уже был")
+            await self._send_message("Такой ответ уже был, введите другой")
             return
 
         await self._process_new_correct_answer(
@@ -62,36 +65,35 @@ class AnswerHandler(BaseCommandHandler):
         await self.app.store.game_rounds.update_round(
             active_round.id, current_player_id=0
         )
-        
-        # Get the round_question to get its ID
-        round_question = await self.app.store.round_questions.get_round_question_by_id(
-            rq_id=active_round.question_id
+
+        round_question = (
+            await self.app.store.round_questions.get_round_question_by_id(
+                rq_id=active_round.question_id
+            )
         )
-        
+
         await self.app.store.round_question_answers.update_answer_status(
             round_question_id=round_question.id,
             answer_id=answer.id,
             new_status=True,
         )
-        
+
         await self._send_message("Это правильный ответ")
 
-        # Get fresh answers list after updating the status
         f = self.app.store.round_question_answers.get_answers_by_round_question
         updated_answers = await f(round_question_id=round_question.id)
 
-        # Check if all answers are found
         if all(ans.is_found for ans in updated_answers):
-            # Unblock all players when all answers are found
-            game_scores = await self.app.store.game_scores.get_scores_by_game(game.id)
+            game_scores = await self.app.store.game_scores.get_scores_by_game(
+                game.id
+            )
             for score in game_scores:
                 await self.app.store.game_scores.update_player_status(
                     score.player_id, game.id, new_status=True
                 )
-                
+
             await self.app.store.round_questions.update_round_question_status(
-                round_question_id=round_question.id,
-                is_found=True
+                round_question_id=round_question.id, is_found=True
             )
             await self._send_message("Все ответы к вопросу отгаданы!")
             await self._finish_current_round_and_start_new(game, active_round)
@@ -108,78 +110,81 @@ class AnswerHandler(BaseCommandHandler):
         await self._send_message("Это не верный ответ :(")
         await self._send_message(f"{user.first_name} заблокирован")
 
-        # Get the round_question and check if all answers are found
-        round_question = await self.app.store.round_questions.get_round_question_by_id(
-            rq_id=active_round.question_id
+        round_question = (
+            await self.app.store.round_questions.get_round_question_by_id(
+                rq_id=active_round.question_id
+            )
         )
         f = self.app.store.round_question_answers.get_answers_by_round_question
         answers = await f(round_question_id=round_question.id)
-        
-        # Check if all players are blocked
-        game_scores = await self.app.store.game_scores.get_scores_by_game(game.id)
+
+        game_scores = await self.app.store.game_scores.get_scores_by_game(
+            game.id
+        )
         if all(not score.is_active for score in game_scores):
-            await self._send_message("Все участники заблокированы! Переходим к следующему вопросу.")
-            
-            # Mark all answers as found
+            await self._send_message(
+                "Все участники заблокированы! Переходим к следующему вопросу."
+            )
+
             for answer in answers:
-                await self.app.store.round_question_answers.update_answer_status(
-                    round_question_id=round_question.id,
-                    answer_id=answer.answer_id,
-                    new_status=True
+                await (
+                    self.app.store.round_question_answers.update_answer_status(
+                        round_question_id=round_question.id,
+                        answer_id=answer.answer_id,
+                        new_status=True,
+                    )
                 )
-            
-            # Unblock all players
+
             for score in game_scores:
                 await self.app.store.game_scores.update_player_status(
                     score.player_id, game.id, new_status=True
                 )
-            
-            # Mark current question as found and move to next
+
             await self.app.store.round_questions.update_round_question_status(
-                round_question_id=round_question.id,
-                is_found=True
+                round_question_id=round_question.id, is_found=True
             )
             await self._finish_current_round_and_start_new(game, active_round)
             return
-        
+
         if all(ans.is_found for ans in answers):
-            # Unblock all players when all answers are found
-            game_scores = await self.app.store.game_scores.get_scores_by_game(game.id)
+            game_scores = await self.app.store.game_scores.get_scores_by_game(
+                game.id
+            )
             for score in game_scores:
                 await self.app.store.game_scores.update_player_status(
                     score.player_id, game.id, new_status=True
                 )
-                
+
             await self.app.store.round_questions.update_round_question_status(
-                round_question_id=round_question.id,
-                is_found=True
+                round_question_id=round_question.id, is_found=True
             )
             await self._finish_current_round_and_start_new(game, active_round)
         else:
             await self._send_want_answer_message()
 
     async def _finish_current_round_and_start_new(self, game, active_round):
-        # Get the round_question to get its ID
-        round_question = await self.app.store.round_questions.get_round_question_by_id(
-            rq_id=active_round.question_id
+        round_question = (
+            await self.app.store.round_questions.get_round_question_by_id(
+                rq_id=active_round.question_id
+            )
         )
-        
-        # Get all answers for the current question
+
         f = self.app.store.round_question_answers.get_answers_by_round_question
         answers = await f(round_question_id=round_question.id)
-        
-        # Only proceed if all answers are found
+
         if not all(ans.is_found for ans in answers):
             await self._send_message("Еще остались неотгаданные ответы")
             await self._send_want_answer_message()
             return
-            
-        # Get all round questions that haven't been answered yet
-        round_questions = await self.app.store.round_questions.get_round_questions_by_id(active_round.id)
+
+        round_questions = (
+            await self.app.store.round_questions.get_round_questions_by_id(
+                active_round.id
+            )
+        )
         unanswered_questions = [rq for rq in round_questions if not rq.is_found]
-        
+
         if not unanswered_questions:
-            # All questions answered, show statistics and ask for next round
             await self._show_player_statistics(game.id)
             await self.app.store.game_rounds.update_round(
                 round_id=active_round.id, is_active=False
@@ -188,26 +193,19 @@ class AnswerHandler(BaseCommandHandler):
                 Message(
                     chat_id=self.chat_id,
                     text="Хотите сыграть ещё один раунд?",
-                    reply_markup=yes_no_keyboard
+                    reply_markup=yes_no_keyboard,
                 )
             )
         else:
-            # Move to the next question
             next_question = unanswered_questions[0]
-            question = await self.app.store.questions.get_question_by_id(next_question.question_id)
-            
-            # Update the round with the current question_id
+            await self.app.store.questions.get_question_by_id(
+                next_question.question_id
+            )
+
             await self.app.store.game_rounds.update_round(
-                round_id=active_round.id,
-                question_id=next_question.id
+                round_id=active_round.id, question_id=next_question.id
             )
-            
-            await self.app.store.tg_api.send_message(
-                Message(
-                    chat_id=self.chat_id,
-                    text=f"Вопрос: {question.question}"
-                )
-            )
+
             await self._send_want_answer_message()
 
     async def _show_player_statistics(self, game_id: int):
@@ -245,10 +243,12 @@ class AnswerHandler(BaseCommandHandler):
         question = await self.app.store.questions.get_question_by_id(
             question_id=round_question.question_id
         )
+        q_text = question.question
+        text = f"❓ Вопрос: {q_text}\n\nКто первый ответит? Жмякайте! 👇"
         await self.app.store.tg_api.send_message(
             Message(
                 chat_id=self.chat_id,
-                text=f"❓ Вопрос: {question.question}\n\nКто первый ответит? Жмякайте! 👇",
+                text=text,
                 reply_markup=want_answer_keyboard,
             )
         )

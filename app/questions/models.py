@@ -37,7 +37,7 @@ class QuestionModel(BaseModel):
         return Question(
             id=self.id,
             question=self.question,
-            answers=[answer.to_data() for answer in self.answers]
+            answers=[answer.to_data() for answer in self.answers],
         )
 
 

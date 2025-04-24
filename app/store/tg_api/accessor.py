@@ -1,7 +1,7 @@
+import asyncio
 import json
 import typing
 from urllib.parse import urlencode, urljoin
-import asyncio
 
 from aiohttp import TCPConnector
 from aiohttp.client import ClientSession
@@ -37,15 +37,19 @@ class TelegramApiAccessor(BaseAccessor):
         self.poller = Poller(app.store)
         self.logger.info("Start polling Telegram updates")
         self.poller.start()
-        # Start the update processor task
-        asyncio.create_task(self._process_updates())
+        self._process_updates_task = asyncio.create_task(
+            self._process_updates()
+        )
 
     async def disconnect(self, app: "Application") -> None:
         if self.session:
             await self.session.close()
-
-        if self.poller:
-            await self.poller.stop()
+        if hasattr(self, "_process_updates_task"):
+            self._process_updates_task.cancel()
+            try:
+                await self._process_updates_task
+            except asyncio.CancelledError:
+                pass
 
     def _build_query(self, method: str, params: dict) -> str:
         base_url = API_URL_TEMPLATE.format(token=self.app.config.bot.token)
@@ -90,7 +94,7 @@ class TelegramApiAccessor(BaseAccessor):
                         text=callback_data,
                         type="callback_query",
                         callback_data=callback_data,
-                        first_name=callback.get("from", {}).get("first_name")
+                        first_name=callback.get("from", {}).get("first_name"),
                     )
 
                 elif message_data and "new_chat_member" in message_data:
@@ -110,7 +114,9 @@ class TelegramApiAccessor(BaseAccessor):
                         chat_id=message_data.get("chat", {}).get("id"),
                         text=message_data.get("text"),
                         type="text",
-                        first_name=message_data.get("from", {}).get("first_name")
+                        first_name=message_data.get("from", {}).get(
+                            "first_name"
+                        ),
                     )
 
                 else:
@@ -148,16 +154,20 @@ class TelegramApiAccessor(BaseAccessor):
             async with self.session.post(url, json=body) as response:
                 data = await response.json()
                 self.logger.info("send_message response: %s", data)
-                
+
                 if data.get("ok"):
                     break
-                    
+
                 if data.get("error_code") == 429:  # Too Many Requests
-                    retry_after = data.get("parameters", {}).get("retry_after", 3)
-                    self.logger.info("Rate limit hit, waiting %s seconds", retry_after)
+                    retry_after = data.get("parameters", {}).get(
+                        "retry_after", 3
+                    )
+                    self.logger.info(
+                        "Rate limit hit, waiting %s seconds", retry_after
+                    )
                     await asyncio.sleep(retry_after)
                     continue
-                    
+
                 # For other errors, break the loop
                 break
 
