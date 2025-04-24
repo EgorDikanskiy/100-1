@@ -1,7 +1,8 @@
 from app.store.bot.handlers.answer import AnswerHandler
-from app.store.bot.handlers.wait_current_user import WaitCurrentUserHandler
+from app.store.bot.handlers.answer_request import AnswerRequestHandler
+from app.store.bot.handlers.next_round import NextRoundHandler
 from app.store.bot.handlers.join_game import JoinGameHandler
-from app.store.tg_api.dataclasses import Update
+from app.store.tg_api.dataclasses import Message, Update
 from app.web.app import Application
 
 from .handlers.rules import RulesHandler
@@ -23,23 +24,27 @@ class CommandDispatcher:
 
     async def dispatch(self, update: Update):
         message = update.object.message
-        command = message.text
         msg_type = message.type
 
-        handler_cls = self.handlers.get(command)
-        if handler_cls:
-            handler = handler_cls(app=self.app, update=update)
-            await handler.handle()
-
         if msg_type == "callback_query":
-            if message.text == "Присоединиться к игре":
+            callback_data = message.callback_data
+            if callback_data == "join_game":
                 handler = JoinGameHandler(app=self.app, update=update)
                 await handler.handle()
-            else:
-                handler = WaitCurrentUserHandler(app=self.app, update=update)
+            elif callback_data == "want_answer":
+                handler = AnswerRequestHandler(app=self.app, update=update)
+                await handler.handle()
+            elif callback_data in ["yes_button", "no_button"]:
+                handler = NextRoundHandler(app=self.app, update=update)
                 await handler.handle()
             return
 
         if msg_type == "text":
-            handler = AnswerHandler(app=self.app, update=update)
-            await handler.handle()
+            command = message.text
+            handler_cls = self.handlers.get(command)
+            if handler_cls:
+                handler = handler_cls(app=self.app, update=update)
+                await handler.handle()
+            else:
+                handler = AnswerHandler(app=self.app, update=update)
+                await handler.handle()

@@ -5,7 +5,7 @@ from typing import Any
 @dataclass
 class Message:
     chat_id: int
-    text: str
+    text: str | None = None
     reply_markup: Any | None = None
 
 
@@ -18,6 +18,8 @@ class UpdateMessage:
     text: str | None = None
     new_user_tg_id: int | None = None
     new_user_first_name: str | None = None
+    callback_data: str | None = None
+    first_name: str | None = None
 
 
 @dataclass

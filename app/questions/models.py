@@ -34,7 +34,11 @@ class QuestionModel(BaseModel):
     )
 
     def to_data(self) -> Question:
-        return Question(id=self.id, question=self.question, answers=[])
+        return Question(
+            id=self.id,
+            question=self.question,
+            answers=[answer.to_data() for answer in self.answers]
+        )
 
 
 class AnswerModel(BaseModel):

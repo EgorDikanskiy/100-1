@@ -244,6 +244,18 @@ class RoundQuestionAccessor(BaseAccessor):
                 return question
             return None
 
+    async def get_round_questions_by_id(
+        self, round_id: int
+    ) -> list[RoundQuestion]:
+        async with self.app.database.session() as session:
+            result = await session.execute(
+                select(RoundQuestionModel).where(
+                    RoundQuestionModel.round_id == round_id
+                )
+            )
+            models = result.scalars().all()
+            return [model.to_data() for model in models]
+
     async def check_round_question_status(self, round_question_id: int) -> bool:
         async with self.app.database.session() as session:
             result = await session.execute(
@@ -254,17 +266,18 @@ class RoundQuestionAccessor(BaseAccessor):
             )
             statuses = result.scalars().all()
 
-            if any(status is False for status in statuses):
-                return True
-            rq_result = await session.execute(
-                select(RoundQuestionModel).where(
-                    RoundQuestionModel.id == round_question_id
+            # If all answers are found, mark the question as found
+            if all(status is True for status in statuses):
+                rq_result = await session.execute(
+                    select(RoundQuestionModel).where(
+                        RoundQuestionModel.id == round_question_id
+                    )
                 )
-            )
-            round_question_model = rq_result.scalars().first()
-            if round_question_model:
-                round_question_model.is_found = True
-                await session.commit()
+                round_question_model = rq_result.scalars().first()
+                if round_question_model:
+                    round_question_model.is_found = True
+                    await session.commit()
+                return True
             return False
 
     async def get_question_by_round_question_id(
@@ -296,6 +309,18 @@ class RoundQuestionAccessor(BaseAccessor):
         self, round_question_id: int, is_found: bool = True
     ) -> RoundQuestion | None:
         async with self.app.database.session() as session:
+            # First check if all answers are found
+            result = await session.execute(
+                select(RoundQuestionAnswerModel.is_found).where(
+                    RoundQuestionAnswerModel.round_question_id == round_question_id
+                )
+            )
+            statuses = result.scalars().all()
+            
+            # Only mark as found if all answers are found
+            if not all(status is True for status in statuses):
+                return None
+                
             result = await session.execute(
                 select(RoundQuestionModel).where(
                     RoundQuestionModel.id == round_question_id

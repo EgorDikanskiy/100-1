@@ -80,6 +80,22 @@ class QuestionAccessor(BaseAccessor):
                 return question
             return None
 
+    async def get_all_questions(self) -> list[Question]:
+        async with self.app.database.session() as session:
+            result = await session.execute(
+                select(QuestionModel)
+                .options(selectinload(QuestionModel.answers))
+            )
+            question_models = result.scalars().all()
+            questions = []
+            for question_model in question_models:
+                question = question_model.to_data()
+                question.answers = [
+                    answer.to_data() for answer in question_model.answers
+                ]
+                questions.append(question)
+            return questions
+
 
 class AnswerAccessor(BaseAccessor):
     async def create_answer(

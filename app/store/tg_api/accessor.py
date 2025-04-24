@@ -1,6 +1,7 @@
 import json
 import typing
 from urllib.parse import urlencode, urljoin
+import asyncio
 
 from aiohttp import TCPConnector
 from aiohttp.client import ClientSession
@@ -77,22 +78,16 @@ class TelegramApiAccessor(BaseAccessor):
 
                 if callback:
                     cb_msg = callback.get("message", {})
-                    inline_kb = cb_msg.get("reply_markup", {}).get(
-                        "inline_keyboard", [[]]
-                    )
-                    button_text = (
-                        inline_kb[0][0].get("text")
-                        if inline_kb and inline_kb[0]
-                        else None
-                    )
                     callback_data = callback.get("data")
 
                     update_msg = UpdateMessage(
                         id=cb_msg.get("message_id"),
                         chat_id=cb_msg.get("chat", {}).get("id"),
                         user_id=callback.get("from", {}).get("id"),
-                        text=button_text or callback_data,
+                        text=callback_data,
                         type="callback_query",
+                        callback_data=callback_data,
+                        first_name=callback.get("from", {}).get("first_name")
                     )
 
                 elif message_data and "new_chat_member" in message_data:
@@ -112,6 +107,7 @@ class TelegramApiAccessor(BaseAccessor):
                         chat_id=message_data.get("chat", {}).get("id"),
                         text=message_data.get("text"),
                         type="text",
+                        first_name=message_data.get("from", {}).get("first_name")
                     )
 
                 else:
@@ -133,9 +129,22 @@ class TelegramApiAccessor(BaseAccessor):
             body["reply_markup"] = json.dumps(message.reply_markup)
 
         url = self._build_query(SEND_MESSAGE_METHOD, params=params)
-        async with self.session.post(url, json=body) as response:
-            data = await response.json()
-            self.logger.info("send_message response: %s", data)
+        while True:
+            async with self.session.post(url, json=body) as response:
+                data = await response.json()
+                self.logger.info("send_message response: %s", data)
+                
+                if data.get("ok"):
+                    break
+                    
+                if data.get("error_code") == 429:  # Too Many Requests
+                    retry_after = data.get("parameters", {}).get("retry_after", 3)
+                    self.logger.info("Rate limit hit, waiting %s seconds", retry_after)
+                    await asyncio.sleep(retry_after)
+                    continue
+                    
+                # For other errors, break the loop
+                break
 
     async def edit_message_reply_markup(self, chat_id: int, message_id: int):
         params = {

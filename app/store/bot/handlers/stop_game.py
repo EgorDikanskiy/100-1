@@ -25,11 +25,11 @@ class StopGameHandler(BaseCommandHandler):
                     round_id=el.id, is_active=False
                 )
             await self.app.store.tg_api.send_message(
-                Message(chat_id=self.chat_id, text="Игра закончилась")
+                Message(chat_id=self.chat_id, text="🏁 Игра закончилась")
             )
         else:
             await self.app.store.tg_api.send_message(
-                Message(chat_id=self.chat_id, text="Игра не активна")
+                Message(chat_id=self.chat_id, text="❌ Игра не активна")
             )
             await self.app.store.tg_api.edit_message_reply_markup(
                 self.chat_id, self.update.object.message.id
