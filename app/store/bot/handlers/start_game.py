@@ -43,7 +43,7 @@ class StartGameHandler(BaseCommandHandler):
             await self.app.store.tg_api.send_message(
                 Message(
                     chat_id=self.chat_id,
-                    text="❌ Недостаточно игроков для начала игры. Нужно минимум 2 игрока."
+                    text="❌ Недостаточно игроков для начала игры. Нужно минимум 1 игрок."
                 )
             )
             await self.app.store.game.update_game_is_active(game.id, False)

@@ -30,12 +30,15 @@ class TelegramApiAccessor(BaseAccessor):
         self.session: ClientSession | None = None
         self.offset: int = 0
         self.poller: Poller | None = None
+        self.update_queue: asyncio.Queue[Update] = asyncio.Queue()
 
     async def connect(self, app: "Application") -> None:
         self.session = ClientSession(connector=TCPConnector(verify_ssl=False))
         self.poller = Poller(app.store)
         self.logger.info("Start polling Telegram updates")
         self.poller.start()
+        # Start the update processor task
+        asyncio.create_task(self._process_updates())
 
     async def disconnect(self, app: "Application") -> None:
         if self.session:
@@ -117,7 +120,19 @@ class TelegramApiAccessor(BaseAccessor):
                 updates.append(Update(type="message", object=update_obj))
 
             if updates:
-                await self.app.store.bots_manager.handle_updates(updates)
+                # Put updates into the queue instead of processing them directly
+                for update in updates:
+                    await self.update_queue.put(update)
+
+    async def _process_updates(self) -> None:
+        """Process updates from the queue"""
+        while True:
+            try:
+                update = await self.update_queue.get()
+                await self.app.store.bots_manager.handle_updates([update])
+                self.update_queue.task_done()
+            except Exception as e:
+                self.logger.error("Error processing update: %s", e)
 
     async def send_message(self, message: Message) -> None:
         params = {
